@@ -9,9 +9,9 @@ from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
-# Configuración de página con diseño ancho
+# Configuración de página con diseño ancho y título técnico
 st.set_page_config(
-    page_title="Cazador de Gangas | Vitrina Oficial",
+    page_title="Smart Ofertas Colombia | Vitrina Oficial",
     page_icon="🎯",
     layout="wide",
     initial_sidebar_state="collapsed"
@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: FRANJA AMARILLA COMPACTA Y DELGADA, LOGOS GRANDES ---
+# --- ESTILOS CSS: LOGOS GRANDES Y BANNER COMPACTO CORPORATIVO ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -64,7 +64,7 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 58px; /* Logotipos imponentes y al doble de tamaño */
+        height: 58px; /* Logotipos imponentes */
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -72,10 +72,10 @@ st.markdown("""
         transform: scale(1.08);
     }
 
-    /* Banner Principal Compacto y Delgado (Más arriba, menos invasivo) */
+    /* Banner Principal Compacto y Técnico */
     .main-header-banner {
         background: #FFD100; /* Amarillo puro brillante estilo Éxito */
-        padding: 12px 20px; /* Reducido drásticamente para hacerlo delgado */
+        padding: 12px 20px;
         border-radius: 12px;
         color: #1E293B;
         box-shadow: 0 4px 15px rgba(255, 209, 0, 0.2);
@@ -85,7 +85,7 @@ st.markdown("""
         text-align: center;
     }
     .brand-title {
-        font-size: 1.8rem; /* Tamaño optimizado y compacto */
+        font-size: 1.8rem;
         font-weight: 900;
         margin: 0;
         color: #0F172A;
@@ -175,11 +175,11 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR COMPACTO Y DELGADO ---
+# --- BANNER SUPERIOR TÉCNICO Y COMERCIAL ---
 st.markdown("""
     <div class="main-header-banner">
-        <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
-        <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</div>
+        <div class="brand-title">🎯 SMART <span>OFERTAS</span> COLOMBIA</div>
+        <div class="brand-subtitle">La vitrina inteligente con las oportunidades más implacables del mercado (Descuentos reales ≥ 50%)</div>
     </div>
 """, unsafe_allow_html=True)
 
