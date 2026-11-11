@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: LOGOS OFICIALES PUROS, GRANDES Y FIJOS EN LA FRANJA SUPERIOR ---
+# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y LOGOTIPOS OFICIALES ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -32,7 +32,7 @@ st.markdown("""
         visibility: visible !important;
     }
 
-    /* Contenedor fijo y estático en la franja blanca superior */
+    /* Contenedor fijo y perfectamente centrado en la franja superior */
     .top-fixed-logos-bar {
         position: fixed;
         top: 6px;
@@ -41,20 +41,21 @@ st.markdown("""
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 35px;
+        gap: 30px;
         pointer-events: auto;
         background: #FFFFFF;
-        padding: 2px 15px;
-        border-radius: 6px;
+        padding: 4px 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
     }
     
     .store-logo-img {
-        height: 26px;
+        height: 25px;
         object-fit: contain;
         transition: transform 0.2s ease;
     }
     .store-logo-img:hover {
-        transform: scale(1.08);
+        transform: scale(1.1);
     }
 
     /* Tarjetas de Producto Modernas */
@@ -119,13 +120,14 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES PUROS ---
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES (OPTIMIZADOS) ---
 st.markdown("""
     <div class="top-fixed-logos-bar">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
+        <img class="store-logo-img" src="https://raw.githubusercontent.com/intellij-rust/intellij-rust.github.io/master/assets/images/logo.png" style="display:none;" onerror="this.style.display='none'">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="">
     </div>
 """, unsafe_allow_html=True)
 
@@ -157,7 +159,7 @@ if ofertas_para_mostrar:
                 if tienda == "Éxito":
                     st.markdown("🟡 **[ ÉXITO ]**")
                 elif tienda == "Falabella":
-                    st.markdown("🟢 **[ FALABELLA ]**")
+                    st.png("🟢 **[ FALABELLA ]**") if False else st.markdown("🟢 **[ FALABELLA ]**")
                 elif tienda == "Alkosto":
                     st.markdown("🔵 **[ ALKOSTO ]**")
                 elif tienda == "Ktronix":
