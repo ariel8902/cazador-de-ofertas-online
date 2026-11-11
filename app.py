@@ -8,28 +8,94 @@ from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
+# Configuración de página con diseño ancho
 st.set_page_config(
-    page_title="Cazador de Gangas - Vitrina Oficial",
+    page_title="Cazador de Gangas | Vitrina Oficial",
     page_icon="🎯",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="collapsed"
 )
 
-# Estilos CSS Profesionales y Limpios
+# --- ESTILOS CSS AVANZADOS DE MARKETING Y DISEÑO VISUAL ---
 st.markdown("""
     <style>
-    .main-title { font-size: 2.5rem; font-weight: 800; color: #FF4B4B; margin-bottom: 0px; text-align: center; }
-    .sub-title { font-size: 1.1rem; color: #B0B0B0; margin-bottom: 30px; text-align: center; }
-    .stButton>button { border-radius: 8px; width: 100%; }
+    /* Fondo general Blanco Hueso / Marfil Suave */
+    .stApp {
+        background-color: #F4F6F9;
+    }
+    
+    /* Barra superior de Marketing (Ticker de Avisos) */
+    .marketing-ticker {
+        background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%);
+        color: #F8FAFC;
+        padding: 8px 15px;
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Banner de Marca Fijo Superior (Firma Comercial) */
+    .brand-header {
+        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+        padding: 30px 20px;
+        border-radius: 12px;
+        text-align: center;
+        color: white;
+        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
+        margin-bottom: 30px;
+        border-bottom: 4px solid #FF4B4B;
+    }
+    .brand-title {
+        font-size: 2.8rem;
+        font-weight: 900;
+        letter-spacing: 1px;
+        margin: 0;
+        color: #FFFFFF;
+        text-transform: uppercase;
+    }
+    .brand-title span {
+        color: #FF4B4B;
+    }
+    .brand-subtitle {
+        font-size: 1.1rem;
+        color: #94A3B8;
+        margin-top: 8px;
+        font-weight: 400;
+    }
+
+    /* Tarjetas de Producto Modernas */
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
+        background-color: #FFFFFF;
+        border: 1px solid #E2E8F0;
+        border-radius: 12px;
+        padding: 15px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+    }
+
+    /* Estilo de Botones */
+    .stButton>button {
+        border-radius: 8px;
+        font-weight: 600;
+    }
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados de sesión para métricas internas
+# Inicializar estados
 if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
     st.session_state.clics = 38
 
-# Cargar ofertas desde el JSON
+# Cargar ofertas guardadas
 if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
     if os.path.exists("ofertas.json"):
         try:
@@ -40,35 +106,43 @@ if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_gua
         except Exception:
             st.session_state.gangas_guardadas = []
 
-# --- BARRA LATERAL (FILTROS PARA EL USUARIO) ---
-st.sidebar.markdown("## 🔍 **Filtrar Ofertas**")
-almacen = st.sidebar.selectbox("Seleccione Almacén:", ["Todos los Almacenes", "Éxito", "Falabella", "Alkosto", "Ktronix"])
-
-st.sidebar.markdown("---")
-# ACCESO RESTRINGIDO / PANEL DE ADMINISTRACIÓN (Oculto a la vista principal)
-with st.sidebar.expander("🛠️ Panel de Administración (Desarrollador)"):
-    st.markdown("### 📊 Métricas Internas")
-    st.metric("👁️ Vistas Totales", st.session_state.vistas)
-    st.metric("🖱️ Clics Totales", st.session_state.clics)
+# --- PANEL DE ADMINISTRACIÓN OCULTO EN LA BARRA LATERAL ---
+with st.sidebar:
+    st.markdown("### ⚙️ Menú de Navegación")
+    almacen = st.selectbox("Filtrar por Almacén:", ["Todos los Almacenes", "Éxito", "Falabella", "Alkosto", "Ktronix"])
     
-    btn_ejecutar = st.button("🚀 Forzar Extracción Manual")
-    if btn_ejecutar:
-        with st.spinner("Actualizando ofertas en vivo..."):
-            res = []
-            res.extend(extraer_exito())
-            res.extend(extraer_falabella())
-            res.extend(extraer_alkosto())
-            res.extend(extraer_ktronix())
-            if res:
-                st.session_state.gangas_guardadas = res
-                with open("ofertas.json", "w", encoding="utf-8") as f:
-                    json.dump(res, f, ensure_ascii=False, indent=2)
-                st.success(f"¡{len(res)} ofertas actualizadas!")
-                st.rerun()
+    st.markdown("---")
+    with st.expander("🛠️ Panel Admin (Gestión)"):
+        st.metric("👁️ Vistas Totales", st.session_state.vistas)
+        st.metric("🖱️ Clics a Ofertas", st.session_state.clics)
+        if st.button("🚀 Forzar Rastreo en Vivo"):
+            with st.spinner("Rastreando tiendas aliadas..."):
+                res = []
+                res.extend(extraer_exito())
+                res.extend(extraer_falabella())
+                res.extend(extraer_alkosto())
+                res.extend(extraer_ktronix())
+                if res:
+                    st.session_state.gangas_guardadas = res
+                    with open("ofertas.json", "w", encoding="utf-8") as f:
+                        json.dump(res, f, ensure_ascii=False, indent=2)
+                    st.success(f"¡{len(res)} ofertas actualizadas!")
+                    st.rerun()
 
-# --- CABECERA PRINCIPAL DE LA VITRINA ---
-st.markdown("<div class='main-title'>🎯 CAZADOR DE GANGAS</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>Las mejores ofertas exclusivas de Colombia con 50% o más de descuento en tiempo real.</div>", unsafe_allow_html=True)
+# --- TICKER DE MARKETING SUPERIOR (Dinámico por temporada) ---
+st.markdown("""
+    <div class="marketing-ticker">
+        🔥 ¡ALERTA DE PRECIOS BAJOS! • Descuentos reales del 50% al 80% verificados • Actualización automática 24/7 🚀
+    </div>
+""", unsafe_allow_html=True)
+
+# --- BANNER DE MARCA FIJO (FIRMA COMERCIAL) ---
+st.markdown("""
+    <div class="brand-header">
+        <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
+        <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables del mercado colombiano. ¡Págalo al mejor precio!</div>
+    </div>
+""", unsafe_allow_html=True)
 
 # Filtrar ofertas por almacén seleccionado
 ofertas_para_mostrar = st.session_state.gangas_guardadas
@@ -79,14 +153,14 @@ if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
         if o.get("Almacen", "").lower().replace("é", "e") == almacen_limpio
     ]
 
-# --- RENDERIZADO DE LA VITRINA (TODAS LAS OFERTAS SIN LÍMITES) ---
+# --- VITRINA DE PRODUCTOS ---
 if ofertas_para_mostrar:
-    st.markdown(f"### 🔥 **Oportunidades Encontradas ({len(ofertas_para_mostrar)} productos disponibles)**")
+    st.markdown(f"### 🛒 **Oportunidades Disponibles ({len(ofertas_para_mostrar)} productos)**")
     cols = st.columns(3)
     for idx, item in enumerate(ofertas_para_mostrar):
         with cols[idx % 3]:
             with st.container(border=True):
-                # Insignia de Color Institucional por Almacén
+                # Insignia de Color Institucional
                 tienda = item.get('Almacen', 'Desconocido')
                 if tienda == "Éxito":
                     st.markdown("🟡 **[ ÉXITO ]**")
@@ -110,4 +184,4 @@ if ofertas_para_mostrar:
                 if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
                     st.session_state.clics += 1
 else:
-    st.info("ℹ️ No hay ofertas disponibles en este momento para la selección actual. Vuelva a consultar más tarde o ejecute una actualización desde el panel de administración.")
+    st.info("ℹ️ No hay ofertas cargadas en este momento. Vuelva a consultar más tarde o ejecute el rastreo desde el panel de administración.")
