@@ -30,24 +30,24 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y BANNER AMARILLO ---
-st.markdown(f"""
+# --- ESTILOS CSS (CORREGIDO SIN F-STRING PARA EVITAR ERRORES DE LLAVES) ---
+st.markdown("""
     <style>
     /* Fondo general de la aplicación */
-    .stApp {{
+    .stApp {
         background-color: #F8FAFC;
         margin-top: 15px;
-    }}
+    }
 
     /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
-    header[data-testid="stHeader"] {{
+    header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
-    }}
+    }
 
     /* Contenedor fijo, estático y perfectamente centrado en la franja blanca */
-    .top-fixed-logos-bar {{
+    .top-fixed-logos-bar {
         position: fixed;
         top: 6px;
         left: 50%;
@@ -61,19 +61,19 @@ st.markdown(f"""
         padding: 4px 20px;
         border-radius: 8px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }}
+    }
     
-    .store-logo-img {{
+    .store-logo-img {
         height: 26px;
         object-fit: contain;
         transition: transform 0.2s ease;
-    }}
-    .store-logo-img:hover {{
+    }
+    .store-logo-img:hover {
         transform: scale(1.1);
-    }}
+    }
 
     /* Banner Principal de Marca con Tonos Amarillos Elegantes */
-    .main-header-banner {{
+    .main-header-banner {
         background: linear-gradient(135deg, #FEF08A 0%, #FACC15 100%);
         padding: 35px 20px;
         border-radius: 16px;
@@ -84,7 +84,7 @@ st.markdown(f"""
         border-bottom: 5px solid #DC2626;
         text-align: center;
     }
-    .brand-title {{
+    .brand-title {
         font-size: 2.8rem;
         font-weight: 900;
         margin: 0;
@@ -92,10 +92,10 @@ st.markdown(f"""
         letter-spacing: 1.5px;
         text-transform: uppercase;
     }
-    .brand-title span {{
+    .brand-title span {
         color: #DC2626;
-    }}
-    .brand-subtitle {{
+    }
+    .brand-subtitle {
         font-size: 1.05rem;
         color: #334155;
         margin: 8px 0 0 0;
@@ -103,24 +103,24 @@ st.markdown(f"""
     }
 
     /* Tarjetas de Producto Modernas */
-    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {{
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
         background-color: #FFFFFF;
         border: 1px solid #CBD5E1;
         border-radius: 12px;
         padding: 15px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }}
-    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {{
+    }
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {
         transform: translateY(-3px);
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }}
+    }
 
     /* Estilo de Botones */
-    .stButton>button {{
+    .stButton>button {
         border-radius: 8px;
         font-weight: 600;
-    }}
+    }
     </style>
 """, unsafe_allow_html=True)
 
@@ -210,15 +210,4 @@ if ofertas_para_mostrar:
                 else:
                     st.markdown(f"⚪ **[ {tienda} ]**")
 
-                st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
-                st.subheader(item.get("Nombre", "Producto"))
-                
-                st.markdown(f"❌ **Precio Regular:** ~{item.get('Precio Normal')}~")
-                st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
-                st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
-                st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
-                
-                if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
-                    st.session_state.clics += 1
-else:
-    st.info("ℹ️ No hay ofertas cargadas en este momento. Vuelva a consultar más tarde o ejecute el rastreo desde el panel de administración.")
+                st.image(
