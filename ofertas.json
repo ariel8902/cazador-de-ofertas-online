@@ -1,1 +1,32 @@
-[]
+[
+  {
+    "Nombre": "Soporte Tv Fijo De 32 A 60 Sf60 Soportv",
+    "Enlace Directo": "https://www.exito.com/soporte-fijo-tv-32-a-60-26707/p",
+    "Almacen": "Éxito (Prueba)",
+    "Estado": "OK - ScraperAPI Funcionando"
+  },
+  {
+    "Nombre": "Televisor SAMSUNG 58 pulgadas LED Uhd4K Smart TV UN58U8000HKXZL",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-58-pulgadas-led-uhd-4k-smart-tv-un58u8000hkxzl-3254967/p",
+    "Almacen": "Éxito (Prueba)",
+    "Estado": "OK - ScraperAPI Funcionando"
+  },
+  {
+    "Nombre": "Televisor Hisense 50 Pulgadas Qled Fhd Smart Tv 50Q4sv",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-50-pulgadas-qled-fhd-smart-tv-50q4sv-3242628/p",
+    "Almacen": "Éxito (Prueba)",
+    "Estado": "OK - ScraperAPI Funcionando"
+  },
+  {
+    "Nombre": "Televisor Tcl 50 Pulgadas Qled Fhd Smart Tv 50S5k",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-50-pulgadas-qled-fhd-smart-tv-50s5k-3234406/p",
+    "Almacen": "Éxito (Prueba)",
+    "Estado": "OK - ScraperAPI Funcionando"
+  },
+  {
+    "Nombre": "Microsoft 365 Personal 12 Meses MICROSOFT  Licencia Computador",
+    "Enlace Directo": "https://www.exito.com/microsoft-365-personal-12-meses-2025-microsoft-ep2-32295-3212043/p",
+    "Almacen": "Éxito (Prueba)",
+    "Estado": "OK - ScraperAPI Funcionando"
+  }
+]
