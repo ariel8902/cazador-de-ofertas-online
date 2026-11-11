@@ -1,144 +1,322 @@
-import streamlit as st
-import pandas as pd
-import json
-import os
-
-# Importar extractores
-from exito import extraer_exito
-from alkosto import extraer_alkosto
-from ktronix import extraer_ktronix
-from falabella import extraer_falabella
-
-# Configuración inicial de la página
-st.set_page_config(
-    page_title="Cazador de Gangas - Panel de Control",
-    page_icon="🎯",
-    layout="wide"
-)
-
-# Estilos CSS
-st.markdown("""
-    <style>
-    .main-title { font-size: 2.2rem; font-weight: 700; color: #FF4B4B; margin-bottom: 5px; }
-    .sub-title { font-size: 1rem; color: #FAFAFA; margin-bottom: 25px; }
-    .stButton>button { border-radius: 8px; }
-    </style>
-""", unsafe_allow_html=True)
-
-# Inicializar estados de sesión
-if 'vistas' not in st.session_state:
-    st.session_state.vistas = 150
-if 'clics' not in st.session_state:
-    st.session_state.clics = 38
-if 'bot_token' not in st.session_state:
-    st.session_state.bot_token = ""
-if 'chat_id' not in st.session_state:
-    st.session_state.chat_id = "@CazadorGangasBot"
-
-# --- CARGAR OFERTAS DESDE OFERTAS.JSON AL ABRIR LA APP ---
-if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
-    if os.path.exists("ofertas.json"):
-        try:
-            with open("ofertas.json", "r", encoding="utf-8") as f:
-                datos = json.load(f)
-                if isinstance(datos, list):
-                    st.session_state.gangas_guardadas = datos
-        except Exception:
-            st.session_state.gangas_guardadas = []
-
-# --- BARRA LATERAL ---
-st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
-
-st.sidebar.markdown("### 📊 **Métricas en Tiempo Real**")
-col_m1, col_m2 = st.sidebar.columns(2)
-col_m1.metric("👁️ Vistas", st.session_state.vistas, delta="+1")
-col_m2.metric("🖱️ Clics", st.session_state.clics, delta="+3")
-
-st.sidebar.markdown("---")
-st.sidebar.markdown("### 🛠️ **Control de Extractores**")
-almacen = st.sidebar.selectbox("Elija el almacén a ver:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
-
-limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=20)
-
-btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción Manual", use_container_width=True)
-btn_limpiar = st.sidebar.button("🗑️ Limpiar Historial", use_container_width=True)
-
-if btn_limpiar:
-    st.session_state.gangas_guardadas = []
-    st.rerun()
-
-# --- PANEL PRINCIPAL ---
-st.markdown("<div class='main-title'>🎯 Panel de Control: Cazador de Gangas (En Vivo)</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>Gestiona la plataforma, analiza clics e interacciones y visualiza ofertas con 50%+ de descuento.</div>", unsafe_allow_html=True)
-
-tab1, tab2, tab3 = st.tabs(["🔥 **Ofertas Extraídas (>=50%)**", "📈 **Gestión y Analítica**", "🤖 **Bot de Telegram**"])
-
-with tab1:
-    if btn_ejecutar:
-        with st.spinner(f"Rastreando en vivo {almacen}... Por favor espere."):
-            res = []
-            if almacen == "Alkosto":
-                res = extraer_alkosto()
-            elif almacen in ["Éxito", "Exito"]:
-                res = extraer_exito()
-            elif almacen == "Ktronix":
-                res = extraer_ktronix()
-            elif almacen == "Falabella":
-                res = extraer_falabella()
-            elif almacen == "Todos los Almacenes":
-                res.extend(extraer_exito())
-                res.extend(extraer_alkosto())
-                res.extend(extraer_ktronix())
-                res.extend(extraer_falabella())
-
-            if res:
-                st.session_state.gangas_guardadas = res
-                st.success(f"¡Se capturaron {len(res)} ofertas con 50%+ de descuento!")
-            else:
-                st.warning("No se encontraron ofertas en la extracción en vivo. Se mantienen las guardadas previamente.")
-
-    # Filtrar según el almacén seleccionado (Flexible a tildes y mayúsculas)
-    ofertas_para_mostrar = st.session_state.gangas_guardadas
-    if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
-        almacen_limpio = almacen.lower().replace("é", "e")
-        ofertas_para_mostrar = [
-            o for o in ofertas_para_mostrar 
-            if o.get("Almacen", "").lower().replace("é", "e") == almacen_limpio
-        ]
-
-    if ofertas_para_mostrar:
-        st.markdown(f"### 🛒 **Catálogo de Ofertas ({len(ofertas_para_mostrar)} disponibles en {almacen})**")
-        cols = st.columns(3)
-        for idx, item in enumerate(ofertas_para_mostrar[:limite_ofertas]):
-            with cols[idx % 3]:
-                with st.container(border=True):
-                    st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
-                    st.subheader(item.get("Nombre", "Producto"))
-                    st.markdown(f"**Almacén:** `{item.get('Almacen', 'Desconocido')}`")
-                    st.markdown(f"**Precio Normal:** ~{item.get('Precio Normal')}~")
-                    st.markdown(f"**Precio Oferta:** `{item.get('Precio Oferta')}`")
-                    st.markdown(f"**Descuento:** 🔥 `{item.get('Descuento')}`")
-                    if st.link_button(f"🔗 Ver Oferta #{idx+1}", item.get("Enlace Directo", "#")):
-                        st.session_state.clics += 1
-    else:
-        st.info("ℹ️ No hay ofertas para el almacén seleccionado en este momento. Seleccione 'Todos los Almacenes' o ejecute el rastreo.")
-
-with tab2:
-    st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Total Visitas", st.session_state.vistas)
-    col_b.metric("Total Clics", st.session_state.clics)
-    ctr = (st.session_state.clics / st.session_state.vistas * 100) if st.session_state.vistas > 0 else 0
-    col_c.metric("Ratio (CTR)", f"{ctr:.1f}%")
-
-with tab3:
-    st.markdown("### 🤖 **Configuración de Alertas por Telegram**")
-    col_t1, col_t2 = st.columns(2)
-    with col_t1:
-        token_input = st.text_input("Bot Token:", value=st.session_state.bot_token, type="password")
-    with col_t2:
-        chat_input = st.text_input("Chat ID / Canal:", value=st.session_state.chat_id)
-    if st.button("💾 Guardar Configuración", type="primary"):
-        st.session_state.bot_token = token_input
-        st.session_state.chat_id = chat_input
-        st.success("✅ Configuración guardada correctamente.")
+[
+  {
+    "Nombre": "Televisor KALLEY 85 pulgadas QLED Uhd4K Smart TV 85GQ405",
+    "Precio Normal": "$9.999.900",
+    "Precio Oferta": "$3.699.900",
+    "Descuento": "-63%",
+    "Enlace Directo": "https://www.exito.com/televisor-kalley-85-pulgadas-qled-uhd-4k-smart-tv-85gq405-3249639/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor SAMSUNG 58 pulgadas LED Uhd4K Smart TV UN58U8000HKXZL",
+    "Precio Normal": "$3.339.900",
+    "Precio Oferta": "$1.619.506",
+    "Descuento": "-51%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-58-pulgadas-led-uhd-4k-smart-tv-un58u8000hkxzl-3254967/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor Hisense 50 Pulgadas Qled Fhd Smart Tv 50Q4sv",
+    "Precio Normal": "$2.299.900",
+    "Precio Oferta": "$973.406",
+    "Descuento": "-57%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-50-pulgadas-qled-fhd-smart-tv-50q4sv-3242628/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor Tcl 50 Pulgadas Qled Fhd Smart Tv 50S5k",
+    "Precio Normal": "$2.299.900",
+    "Precio Oferta": "$1.097.904",
+    "Descuento": "-52%",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-50-pulgadas-qled-fhd-smart-tv-50s5k-3234406/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor SAMSUNG 50 pulgadas Mini LED Fhd Smart TV UN50M60HAKXZL",
+    "Precio Normal": "$2.999.900",
+    "Precio Oferta": "$1.179.904",
+    "Descuento": "-60%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-mini-led-uhd-4k-smart-tv-un50m60hakxzl-3263624/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor TCL 65 pulgadas LED Uhd4K Smart TV 65V6C",
+    "Precio Normal": "$4.799.900",
+    "Precio Oferta": "$1.907.904",
+    "Descuento": "-60%",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-65-pulgadas-led-uhd-4k-smart-tv-65v6c-3248709/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor HISENSE 58 pulgadas LED Uhd4K Smart TV 58A6NV",
+    "Precio Normal": "$3.599.900",
+    "Precio Oferta": "$1.319.905",
+    "Descuento": "-63%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-58-pulgadas-led-uhd-4k-smart-tv-58a6nv-3208349/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor Samsung 50 Pulgadas Led Uhd4k Smart Tv Un50u8000fkxzl",
+    "Precio Normal": "$2.699.900",
+    "Precio Oferta": "$1.314.900",
+    "Descuento": "-51%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-led-uhd-4k-smart-tv-un50u8000fkxzl-3209289/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor HISENSE 65 pulgadas QLED Uhd4K Smart TV 65QD5SV",
+    "Precio Normal": "$4.099.900",
+    "Precio Oferta": "$1.835.904",
+    "Descuento": "-55%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-65-pulgadas-qled-uhd-4k-smart-tv-65qd5sv-3245570/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor CAIXUN 55 pulgadas QLED Uhd4K Smart TV C55KAUGQ",
+    "Precio Normal": "$3.999.900",
+    "Precio Oferta": "$1.279.903",
+    "Descuento": "-68%",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-55-pulgadas-qled-uhd-4k-smart-tv-c55kaugq-3255839/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Cable Original Apple Usb Tipo C A Conector Lightning 2 Metros",
+    "Precio Normal": "$89.900",
+    "Precio Oferta": "$24.815",
+    "Descuento": "-72%",
+    "Enlace Directo": "https://www.exito.com/cable-original-apple-usb-tipo-c-a-conector-lightning-2-mt-100054636-mp/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Freidora BLACK & DECKER 4.2 lts Mecánica Negro AFBD423BDLA",
+    "Precio Normal": "$439.900",
+    "Precio Oferta": "$185.911",
+    "Descuento": "-57%",
+    "Enlace Directo": "https://www.exito.com/freidora-black-decker-42-lts-mecanica-negro-afbd42-3bdla-3246278/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Nevecon ELECTROLUX Side By Side 522 Litros  ERS53F3C5CB Negro",
+    "Precio Normal": "$5.999.900",
+    "Precio Oferta": "$2.579.957",
+    "Descuento": "-56%",
+    "Enlace Directo": "https://www.exito.com/nevecon-electrolux-side-by-side-522-litros-ers53f3c5cb-negro-3244031/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Lavadora AI DD LG Carga superior 20 kg (44lb)  Negro WT20NBTX6T.ANBECOL",
+    "Precio Normal": "$3.599.900",
+    "Precio Oferta": "$1.727.008",
+    "Descuento": "-52%",
+    "Enlace Directo": "https://www.exito.com/lavadora-c-superior-20-k-negra-lg-carga-superior-20-kg-44lb-wt20nbtx6tanbecol-3247532/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Lavadora WHIRLPOOL Carga superior 19 kg (42 lb) WW19LTAHLA",
+    "Precio Normal": "$3.508.900",
+    "Precio Oferta": "$1.579.005",
+    "Descuento": "-55%",
+    "Enlace Directo": "https://www.exito.com/lavadora-whirlpool-carga-superior-19-kg-42-lb-ww19ltahla-3062151/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Top de Celulares",
+    "Precio Normal": "$6.999.990",
+    "Precio Oferta": "$699.050",
+    "Descuento": "-90%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-celulares/c/descuentos-celulares",
+    "Imagen": "https://cdn.dam.alkosto.com/products/7705946480963/7705946480963-001.webp/celular-kalley-black-6-512gb-5g-negro-ram-8gb-bateria-5000mah-camara-50mpx?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Televisores más vendidos",
+    "Precio Normal": "$5.499.900",
+    "Precio Oferta": "$799.900",
+    "Descuento": "-85%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-televisores/c/descuentos-televisores",
+    "Imagen": "https://cdn.dam.alkosto.com/products/8806097999188/8806097999188-001.webp/tv-samsung-65-pulgadas-1651-cm-65m80h-4k-uhd-mini-ledsmart-tv-con-ia?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Lo mejor en Cómputo",
+    "Precio Normal": "$6.999.000",
+    "Precio Oferta": "$299.930",
+    "Descuento": "-95%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-informatica/c/descuentos-informatica",
+    "Imagen": "https://cdn.dam.alkosto.com/products/4711474986160/4711474986160-001.webp/computador-portatil-acer-aspire-lite-156-pulgadas-5634-intel-core-ultra-5-ram-16gb-disco-ssd-1tb-plateado?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Electrodomésticos para tu Hogar",
+    "Precio Normal": "$1.999.000",
+    "Precio Oferta": "$149.900",
+    "Descuento": "-92%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-electrodomesticos/c/descuentos-electrodomesticos",
+    "Imagen": "https://cdn.dam.alkosto.com/products/7705946476843/7705946476843-001.webp/nevera-kalley-no-frost-congelador-superior-245-litros-inverter-k-nt245l-gris?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Videojuegos",
+    "Precio Normal": "$2.949.900",
+    "Precio Oferta": "$99.900",
+    "Descuento": "-96%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-videojuegos/c/descuentos-videojuegos",
+    "Imagen": "https://cdn.dam.alkosto.com/products/711719028093/711719028093-001.webp/juego-ps5-god-of-war-laufey?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Accesorios",
+    "Precio Normal": "$2.249.900",
+    "Precio Oferta": "$159.910",
+    "Descuento": "-92%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-accesorios/c/descuentos-accesorios",
+    "Imagen": "https://cdn.dam.alkosto.com/products/7702271848635/7702271848635-001.webp/dispensador-agua-inteligente-mascotas-vta-hydro-28-litros-tipo-fuente?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Audio y Sonido Destacado",
+    "Precio Normal": "$5.999.900",
+    "Precio Oferta": "$229.900",
+    "Descuento": "-96%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-audio/c/descuentos-audio",
+    "Imagen": "https://cdn.dam.alkosto.com/products/8806091958914/8806091958914-001.webp/minicomponente-lg-xboom-rnc9-1800-watts-negro-torre-sonido?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Muebles y Colchones Favoritos",
+    "Precio Normal": "$4.169.900",
+    "Precio Oferta": "$814.900",
+    "Descuento": "-80%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-muebles-colchones/c/descuentos-muebles-colchones",
+    "Imagen": "https://cdn.dam.alkosto.com/products/7708401096129/7708401096129-001.webp/colchon-eldorado-doble-florence-140-x-190-cm?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "Llantas y Accesorios Auto",
+    "Precio Normal": "$895.850",
+    "Precio Oferta": "$120.615",
+    "Descuento": "-86%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://www.alkosto.com/ofertas/descuentos-llantas/c/descuentos-llantas",
+    "Imagen": "https://cdn.dam.alkosto.com/products/4717954421855/4717954421855-001.webp/llanta-kenda-kr20-195-55-r15-automovil?w=256",
+    "Almacen": "Alkosto"
+  },
+  {
+    "Nombre": "TV TCL 55\" Pulgadas 139 cm 55T6C 4K-UHD QLED TV Smart TV Google",
+    "Precio Normal": "$5.569.010",
+    "Precio Oferta": "$129.900",
+    "Descuento": "-97%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://prd-ads.alkst.co/r?e=eyJ2IjoiMS4xNCIsImF2Ijo2MTY5Mzg5LCJhdCI6MTE2NTMsImJ0IjowLCJjbSI6NjU5Mjc0ODE1LCJjaCI6NjU0MjQsImNrIjp7fSwiY3IiOjk0ODIwOTA5MSwiZGkiOiJiZjdlYzZkNDFhN2Q0MmVjYThiZWFlMjgwZTAxY2QwZSIsImRqIjowLCJpaSI6IjEzMTg2ZTIyMmY1YTQ4ZDBhMTYyYTMxZjM3NjQxMGFjIiwiZG0iOjMsImZjIjoxMTI0NTA2ODk3LCJmbCI6ODY0MTc0MjM1LCJpcCI6IjE4MS4xMzEuNjEuMzIiLCJrdyI6Im9mZXJ0YXMsY2F0ZWdvcnlmaWx0ZXJlZD1nZW5lcmFsLHNvcnRpbmc9a3Ryb25peGluZGV4YWxnb2xpYXByZCIsIm1rIjoiY2F0ZWdvcnlmaWx0ZXJlZD1nZW5lcmFsIiwibnciOjExODIxLCJwYyI6MCwib3AiOjAsIm1wIjowLCJlYyI6MCwiZ20iOjAsImVwIjpudWxsLCJwciI6MjU4NjY4LCJydCI6MSwicnMiOjUwMCwic2EiOiI5NiIsInNiIjoiaS0wYjhlYjBhMGFkY2RkOGUyNSIsInNwIjoyNDQwODU3LCJzdCI6MTMwNjI3NCwidWsiOiJHQTEuMS4xMjE5NjY2NTYwLjE3OTQzODYzMDQiLCJ6biI6Mzg1OTY0LCJ0cyI6MTc5NDM4NjMwNzk3NiwicG4iOiIzODU5NjQiLCJnYyI6dHJ1ZSwiZ0MiOnRydWUsImdzIjoibm9uZSIsInR6IjoiQW1lcmljYS9Cb2dvdGEiLCJhZyI6MSwiYXRuIjp7ImkiOlt7InQiOiJTYW1lQ2F0ZWdvcnlCcmFuZCIsImMiOiJDZWx1bGFyZXMgSG9ub3IiLCJiIjoiSE9OT1IifSx7InQiOiJTYW1lQnJhbmQiLCJiIjoiSE9OT1IifSx7InAiOiI3NzA5MTAxNjY2MjA5IiwidCI6IlNhbWVQcm9kdWN0In1dfSwidXIiOiJodHRwczovL3d3dy5rdHJvbml4LmNvbS9jZWx1bGFyZXMvc21hcnRwaG9uZXMvY2VsdWxhcmVzLWhvbm9yL2MvQklfTTAwNl9LVFJPTj9zb3J0PXJlbGV2YW5jZSZxPSUzQXJlbGV2YW5jZSUzQWZhbWlsaWFzLWNlbHVsYXJlcyUzQUhvbm9yJTIwWDhkJTNBbWVtb3JpYS1pbnRlcm5hJTNBMjU2JTIwR0IifQ&s=Qta2gw6EERALaguMCbDYoSaF6ok",
+    "Imagen": "https://cdn.dam.ktronix.com/products/6937574879524/6937574879524-001.webp/tv-tcl-55-pulgadas-139-cm-55t6c-4k-uhd-qled-tv-smart-tv-google?w=750",
+    "Almacen": "Ktronix"
+  },
+  {
+    "Nombre": "TV TCL 55\" Pulgadas 139 cm 55T6C 4K-UHD QLED TV Smart TV Google",
+    "Precio Normal": "$5.569.010",
+    "Precio Oferta": "$129.900",
+    "Descuento": "-97%",
+    "Medio Pago": "Cualquier Medio de Pago",
+    "Enlace Directo": "https://prd-ads.alkst.co/r?e=eyJ2IjoiMS4xNCIsImF2Ijo2MTY5Mzg5LCJhdCI6MTE2NTMsImJ0IjowLCJjbSI6NjU5Mjc0ODE1LCJjaCI6NjU0MjQsImNrIjp7fSwiY3IiOjk0ODIwOTA5MSwiZGkiOiJiZjdlYzZkNDFhN2Q0MmVjYThiZWFlMjgwZTAxY2QwZSIsImRqIjowLCJpaSI6IjEzMTg2ZTIyMmY1YTQ4ZDBhMTYyYTMxZjM3NjQxMGFjIiwiZG0iOjMsImZjIjoxMTI0NTA2ODk3LCJmbCI6ODY0MTc0MjM1LCJpcCI6IjE4MS4xMzEuNjEuMzIiLCJrdyI6Im9mZXJ0YXMsY2F0ZWdvcnlmaWx0ZXJlZD1nZW5lcmFsLHNvcnRpbmc9a3Ryb25peGluZGV4YWxnb2xpYXByZCIsIm1rIjoiY2F0ZWdvcnlmaWx0ZXJlZD1nZW5lcmFsIiwibnciOjExODIxLCJwYyI6MCwib3AiOjAsIm1wIjowLCJlYyI6MCwiZ20iOjAsImVwIjpudWxsLCJwciI6MjU4NjY4LCJydCI6MSwicnMiOjUwMCwic2EiOiI5NiIsInNiIjoiaS0wYjhlYjBhMGFkY2RkOGUyNSIsInNwIjoyNDQwODU3LCJzdCI6MTMwNjI3NCwidWsiOiJHQTEuMS4xMjE5NjY2NTYwLjE3OTQzODYzMDQiLCJ6biI6Mzg1OTY0LCJ0cyI6MTc5NDM4NjMwNzk3NiwicG4iOiIzODU5NjQiLCJnYyI6dHJ1ZSwiZ0MiOnRydWUsImdzIjoibm9uZSIsInR6IjoiQW1lcmljYS9Cb2dvdGEiLCJhZyI6MSwiYXRuIjp7ImkiOlt7InQiOiJTYW1lQ2F0ZWdvcnlCcmFuZCIsImMiOiJDZWx1bGFyZXMgSG9ub3IiLCJiIjoiSE9OT1IifSx7InQiOiJTYW1lQnJhbmQiLCJiIjoiSE9OT1IifSx7InAiOiI3NzA5MTAxNjY2MjA5IiwidCI6IlNhbWVQcm9kdWN0In1dfSwidXIiOiJodHRwczovL3d3dy5rdHJvbml4LmNvbS9jZWx1bGFyZXMvc21hcnRwaG9uZXMvY2VsdWxhcmVzLWhvbm9yL2MvQklfTTAwNl9LVFJPTj9zb3J0PXJlbGV2YW5jZSZxPSUzQXJlbGV2YW5jZSUzQWZhbWlsaWFzLWNlbHVsYXJlcyUzQUhvbm9yJTIwWDhkJTNBbWVtb3JpYS1pbnRlcm5hJTNBMjU2JTIwR0IifQ&s=Qta2gw6EERALaguMCbDYoSaF6ok",
+    "Imagen": "https://cdn.dam.ktronix.com/products/6937574879524/6937574879524-001.webp/tv-tcl-55-pulgadas-139-cm-55t6c-4k-uhd-qled-tv-smart-tv-google?w=750",
+    "Almacen": "Ktronix"
+  },
+  {
+    "Nombre": "Más marcas",
+    "Precio Normal": "$14.000.000",
+    "Precio Oferta": "$500.000",
+    "Descuento": "-96%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/category/cat171006/Computadores",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Tipo de Entrega",
+    "Precio Normal": "$14.000.000",
+    "Precio Oferta": "$500.000",
+    "Descuento": "-96%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/category/cat171006/Computadores",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Lenovo",
+    "Precio Normal": "$8.759.900",
+    "Precio Oferta": "$779.900",
+    "Descuento": "-91%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/151329941/todo-en-uno-lenovo-ryzen-7-7730u-ssd-512gb-ram-16gb-led-23-8-led-negro/151329942",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Lenovo",
+    "Precio Normal": "$5.539.800",
+    "Precio Oferta": "$2.479.900",
+    "Descuento": "-55%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/151329941/todo-en-uno-lenovo-ryzen-7-7730u-ssd-512gb-ram-16gb-led-23-8-led-negro/151329942",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "Lenovo",
+    "Precio Normal": "$4.971.780",
+    "Precio Oferta": "$1.909.900",
+    "Descuento": "-61%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/150131098/todo-en-uno-lenovo-intel-core-i5-13420h-8gb-ram-512gb-ssd-238-fhd/150131099",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  },
+  {
+    "Nombre": "ASUS",
+    "Precio Normal": "$8.209.900",
+    "Precio Oferta": "$3.379.900",
+    "Descuento": "-58%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/154753902/todo-en-uno-asus-intel-core-7-240h-16gb-ram-1-tb-ssd-27-fhd/154753903",
+    "Imagen": "https://via.placeholder.com/200?text=Falabella",
+    "Almacen": "Falabella",
+    "Categoria": "Electrodomésticos"
+  }
+]
