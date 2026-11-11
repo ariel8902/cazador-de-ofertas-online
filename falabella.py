@@ -37,8 +37,8 @@ def extraer_falabella():
                     enlace = f"https://www.falabella.com.co{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
                     nombre_elem = prod.find(["b", "h3", "h2", "span"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower()))
-                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Falabella"
-                    if len(nombre) < 5:
+                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else ""
+                    if not nombre or len(nombre) < 5:
                         continue
 
                     img_elem = prod.find("img")
@@ -55,7 +55,7 @@ def extraer_falabella():
                     precios_num = []
                     for pr in precios_raw:
                         num = int(re.sub(r'[^\d]', '', pr))
-                        if num > 10000:
+                        if num > 30000:
                             precios_num.append(num)
                     
                     precios_num = sorted(list(set(precios_num)), reverse=True)
@@ -66,9 +66,12 @@ def extraer_falabella():
                     precio_oferta = precios_num[-1]
                     precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
                     
+                    if precio_oferta <= 0 or precio_normal <= precio_oferta:
+                        continue
+                        
                     descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
                     
-                    if descuento >= 50:
+                    if 50 <= descuento <= 80:
                         ofertas.append({
                             "Nombre": nombre,
                             "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
