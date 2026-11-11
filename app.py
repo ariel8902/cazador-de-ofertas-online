@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: LOGOS AL DOBLE DE TAMAÑO Y AMARILLO PURO ÉXITO ---
+# --- ESTILOS CSS: LOGOS MÁS GRANDES Y BANNER AMARILLO LIMPIO (SIN LÍNEAS NEGRAS) ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -55,7 +55,7 @@ st.markdown("""
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 30px;
+        gap: 35px;
         pointer-events: auto;
         background: #FFFFFF;
         padding: 4px 20px;
@@ -64,7 +64,7 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 48px; /* Logotipos al doble de tamaño */
+        height: 58px; /* Logotipos más grandes y llamativos */
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -72,20 +72,19 @@ st.markdown("""
         transform: scale(1.08);
     }
 
-    /* Banner Principal de Marca con Amarillo Puro Estilo Éxito */
+    /* Banner Principal de Marca: Amarillo puro brillante estilo Éxito, sin líneas negras */
     .main-header-banner {
-        background: #FFD100; /* Amarillo puro brillante estilo Éxito */
-        padding: 35px 20px;
+        background: #FFD100;
+        padding: 40px 20px;
         border-radius: 16px;
         color: #1E293B;
-        box-shadow: 0 10px 25px rgba(255, 209, 0, 0.3);
+        box-shadow: 0 8px 25px rgba(255, 209, 0, 0.25);
         margin-bottom: 30px;
-        border-top: 5px solid #1E293B;
-        border-bottom: 5px solid #0F172A;
+        border: none; /* Cero líneas negras alrededor */
         text-align: center;
     }
     .brand-title {
-        font-size: 2.8rem;
+        font-size: 3rem;
         font-weight: 900;
         margin: 0;
         color: #0F172A;
@@ -96,9 +95,9 @@ st.markdown("""
         color: #DC2626;
     }
     .brand-subtitle {
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         color: #1E293B;
-        margin: 8px 0 0 0;
+        margin: 10px 0 0 0;
         font-weight: 700;
     }
 
@@ -164,7 +163,7 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON LOS LOGOS DOBLE DE GRANDES ---
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS AMPLIADOS ---
 st.markdown(f"""
     <div class="top-fixed-logos-bar">
         <img class="store-logo-img" src="data:image/png;base64,{img_exito}" alt="Éxito">
@@ -174,7 +173,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR DE MARCA (AMARILLO PURO ÉXITO) ---
+# --- BANNER SUPERIOR DE MARCA (AMARILLO PURO SIN LÍNEAS NEGRAS) ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
