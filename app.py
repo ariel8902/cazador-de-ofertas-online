@@ -1,7 +1,13 @@
 import streamlit as st
 import pandas as pd
-from alkosto import extraer_alkosto
+import json
+import os
+
+# Importar los extractores actualizados
 from exito import extraer_exito
+from alkosto import extraer_alkosto
+from ktronix import extraer_ktronix
+from falabella import extraer_falabella
 
 # Configuración inicial de la página
 st.set_page_config(
@@ -24,12 +30,22 @@ if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
     st.session_state.clics = 38
-if 'gangas_guardadas' not in st.session_state:
-    st.session_state.gangas_guardadas = []
 if 'bot_token' not in st.session_state:
     st.session_state.bot_token = ""
 if 'chat_id' not in st.session_state:
     st.session_state.chat_id = "@CazadorGangasBot"
+
+# --- CARGA AUTOMÁTICA DESDE OFERTAS.JSON (GITHUB ACTIONS) ---
+if 'gangas_guardadas' not in st.session_state:
+    st.session_state.gangas_guardadas = []
+    if os.path.exists("ofertas.json"):
+        try:
+            with open("ofertas.json", "r", encoding="utf-8") as f:
+                datos_json = json.load(f)
+                if isinstance(datos_json, list) and len(datos_json) > 0:
+                    st.session_state.gangas_guardadas = datos_json
+        except Exception as e:
+            pass
 
 # --- BARRA LATERAL ---
 st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
@@ -41,55 +57,76 @@ col_m2.metric("🖱️ Clics", st.session_state.clics, delta="+3")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛠️ **Control de Extractores**")
-almacen = st.sidebar.selectbox("Elija el almacén a rastrear:", ["Éxito", "Alkosto", "Falabella", "Ktronix"])
+almacen = st.sidebar.selectbox("Elija el almacén a rastrear:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
 
 limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=20)
 
-btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción", use_container_width=True)
+btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción Manual", use_container_width=True)
 btn_limpiar = st.sidebar.button("🗑️ Limpiar Historial", use_container_width=True)
 
 if btn_limpiar:
     st.session_state.gangas_guardadas = []
+    if os.path.exists("ofertas.json"):
+        try:
+            with open("ofertas.json", "w", encoding="utf-8") as f:
+                json.dump([], f)
+        except Exception:
+            pass
     st.rerun()
 
 # --- PANEL PRINCIPAL ---
 st.markdown("<div class='main-title'>🎯 Panel de Control: Cazador de Gangas (En Vivo)</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>Gestiona la plataforma, analiza clics e interacciones y ejecuta la extracción masiva de ofertas.</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>Gestiona la plataforma, analiza clics e interacciones y visualiza ofertas con 50%+ de descuento.</div>", unsafe_allow_html=True)
 
-tab1, tab2, tab3 = st.tabs(["🔥 **Ofertas Extraídas**", "📈 **Gestión y Analítica**", "🤖 **Bot de Telegram**"])
+tab1, tab2, tab3 = st.tabs(["🔥 **Ofertas Extraídas (>=50%)**", "📈 **Gestión y Analítica**", "🤖 **Bot de Telegram**"])
 
 with tab1:
     if btn_ejecutar:
-        with st.spinner(f"Rastreando gangas reales en {almacen}... Por favor espere."):
+        with st.spinner(f"Rastreando gangas en {almacen}... Por favor espere."):
+            nuevos_resultados = []
             if almacen == "Alkosto":
-                resultados = extraer_alkosto()
+                nuevos_resultados = extraer_alkosto()
             elif almacen == "Éxito":
-                # Invocación explícita con kwargs
-                resultados = extraer_exito(pagina=1, categoria="Ofertas", url_busqueda="https://www.exito.com/ofertas")
-            else:
-                resultados = []
+                nuevos_resultados = extraer_exito()
+            elif almacen == "Ktronix":
+                nuevos_resultados = extraer_ktronix()
+            elif almacen == "Falabella":
+                nuevos_resultados = extraer_falabella()
+            elif almacen == "Todos los Almacenes":
+                nuevos_resultados.extend(extraer_exito())
+                nuevos_resultados.extend(extraer_alkosto())
+                nuevos_resultados.extend(extraer_ktronix())
+                nuevos_resultados.extend(extraer_falabella())
 
-            if resultados:
-                st.session_state.gangas_guardadas.extend(resultados[:limite_ofertas])
-                st.success(f"¡Se capturaron {len(resultados)} gangas en {almacen}!")
+            if nuevos_resultados:
+                st.session_state.gangas_guardadas = nuevos_resultados
+                with open("ofertas.json", "w", encoding="utf-8") as f:
+                    json.dump(nuevos_resultados, f, ensure_ascii=False, indent=2)
+                st.success(f"¡Se capturaron {len(nuevos_resultados)} gangas con 50%+ de descuento!")
             else:
                 st.warning(f"No se obtuvieron resultados para {almacen} en esta ejecución.")
 
-    if st.session_state.gangas_guardadas:
-        st.markdown("### 🛒 **Catálogo de Ofertas Capturadas**")
+    # Filtrar según selección de la barra lateral
+    ofertas_a_mostrar = st.session_state.gangas_guardadas
+    if almacen != "Todos los Almacenes" and ofertas_a_mostrar:
+        ofertas_a_mostrar = [o for o in ofertas_a_mostrar if o.get("Almacen", "").lower() == almacen.lower()]
+
+    if ofertas_a_mostrar:
+        st.markdown(f"### 🛒 **Catálogo de Ofertas Capturadas ({len(ofertas_a_mostrar)} en pantalla)**")
         cols = st.columns(3)
-        for idx, item in enumerate(st.session_state.gangas_guardadas):
+        for idx, item in enumerate(ofertas_a_mostrar[:limite_ofertas]):
             with cols[idx % 3]:
                 with st.container(border=True):
                     st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
                     st.subheader(item.get("Nombre", "Producto"))
+                    st.markdown(f"**Almacén:** `{item.get('Almacen', 'Desconocido')}`")
                     st.markdown(f"**Precio Normal:** ~{item.get('Precio Normal')}~")
                     st.markdown(f"**Precio Oferta:** `{item.get('Precio Oferta')}`")
-                    st.markdown(f"**Descuento:** `{item.get('Descuento')}`")
+                    st.markdown(f"**Descuento:** 🔥 `{item.get('Descuento')}`")
                     if st.link_button(f"🔗 Ver Oferta #{idx+1}", item.get("Enlace Directo", "#")):
                         st.session_state.clics += 1
     else:
-        st.info("👈 Seleccione el almacén en la barra lateral y presione 'Ejecutar Extracción' para cargar datos.")
+        st.info("ℹ️ No hay ofertas cargadas para la selección actual. Presione 'Ejecutar Extracción Manual' o espere el ciclo nocturno de GitHub Actions.")
 
 with tab2:
     st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
