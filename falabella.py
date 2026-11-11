@@ -27,8 +27,7 @@ def extraer_falabella():
                 soup = BeautifulSoup(res.text, "html.parser")
                 tarjetas = soup.find_all(["div", "article"], class_=lambda x: x and ("pod" in str(x).lower() or "product" in str(x).lower()))
                 
-                for prod in tarjetas[:30]:
-                    # 1. Enlace y filtro de producto individual
+                for prod in tarjetas[:40]:
                     link_elem = prod.find("a", href=True)
                     if not link_elem:
                         continue
@@ -37,13 +36,11 @@ def extraer_falabella():
                         continue
                     enlace = f"https://www.falabella.com.co{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
-                    # 2. Nombre
                     nombre_elem = prod.find(["b", "h3", "h2", "span"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower()))
                     nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Falabella"
                     if len(nombre) < 5:
                         continue
 
-                    # 3. Imagen real
                     img_elem = prod.find("img")
                     imagen = "https://via.placeholder.com/200?text=Falabella"
                     if img_elem:
@@ -53,7 +50,6 @@ def extraer_falabella():
                         elif src and str(src).startswith("//"):
                             imagen = "https:" + src.split()[0]
 
-                    # 4. Precios (Normal, Tarjeta CMR y Otros Medios)
                     texto = prod.get_text(separator=" ", strip=True)
                     precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
                     precios_num = []
@@ -76,7 +72,7 @@ def extraer_falabella():
                         ofertas.append({
                             "Nombre": nombre,
                             "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
-                            "Precio Tarjeta Exito": f"${precio_tarjeta:,.0f}".replace(",", "."), # Usado para Tarjeta CMR
+                            "Precio Tarjeta": f"${precio_tarjeta:,.0f}".replace(",", "."),
                             "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
                             "Descuento": f"-{descuento}%",
                             "Enlace Directo": enlace,
