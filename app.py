@@ -16,28 +16,62 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS PROFESIONALES Y ATRACTIVOS ---
+# --- ESTILOS CSS: LOGOS OFICIALES EN LA BARRA SUPERIOR FIJA ---
 st.markdown("""
     <style>
-    /* Fondo general de la aplicación (Marfil suave / Gris perla) */
+    /* Fondo general de la aplicación */
     .stApp {
         background-color: #F8FAFC;
+        margin-top: 15px;
     }
 
-    /* Banner Principal de Marca con Estética Comercial Moderna */
+    /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
+    header[data-testid="stHeader"] {
+        background-color: #FFFFFF !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+        visibility: visible !important;
+    }
+
+    /* Contenedor fijo, estático y perfectamente centrado en la franja blanca */
+    .top-fixed-logos-bar {
+        position: fixed;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 999999;
+        display: flex;
+        align-items: center;
+        gap: 35px;
+        pointer-events: auto;
+        background: #FFFFFF;
+        padding: 4px 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    
+    .store-logo-img {
+        height: 28px;
+        object-fit: contain;
+        transition: transform 0.2s ease;
+    }
+    .store-logo-img:hover {
+        transform: scale(1.1);
+    }
+
+    /* Banner Principal de Marca con Estética Moderna */
     .main-header-banner {
         background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-        padding: 35px 25px;
+        padding: 30px 20px;
         border-radius: 16px;
         color: white;
         box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
         margin-bottom: 30px;
-        border-top: 5px solid #FACC15; /* Toque Amarillo Éxito */
+        border-top: 5px solid #FACC15;
         border-bottom: 5px solid #FF4B4B;
         text-align: center;
     }
     .brand-title {
-        font-size: 3rem;
+        font-size: 2.8rem;
         font-weight: 900;
         margin: 0;
         color: #FFFFFF;
@@ -48,38 +82,11 @@ st.markdown("""
         color: #FF4B4B;
     }
     .brand-subtitle {
-        font-size: 1.1rem;
+        font-size: 1.05rem;
         color: #94A3B8;
-        margin: 10px 0 25px 0;
+        margin: 8px 0 0 0;
         font-weight: 400;
     }
-    
-    /* Contenedor Limpio y Profesional para los Logotipos Oficiales */
-    .official-logos-container {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        gap: 25px;
-        background: rgba(255, 255, 255, 0.08);
-        padding: 12px 30px;
-        border-radius: 12px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
-    }
-    .store-badge-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 8px 18px;
-        border-radius: 20px;
-        font-weight: 900;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-    }
-    .badge-exito { background-color: #FACC15; color: #713F12; }
-    .badge-falabella { background-color: #84CC16; color: #1A2E05; }
-    .badge-alkosto { background-color: #0EA5E9; color: #0C4A6E; }
-    .badge-ktronix { background-color: #EF4444; color: #450A0A; }
 
     /* Tarjetas de Producto Modernas */
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
@@ -143,17 +150,21 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BANNER SUPERIOR DE MARCA CON DISEÑO ATRACTIVO Y LOGOS LIMPIOS ---
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES (EN LA RAÍZ) ---
+st.markdown("""
+    <div class="top-fixed-logos-bar">
+        <img class="store-logo-img" src="exito.png" alt="Éxito">
+        <img class="store-logo-img" src="falabella.png" alt="Falabella">
+        <img class="store-logo-img" src="alkosto.png" alt="Alkosto">
+        <img class="store-logo-img" src="ktronix.png" alt="Ktronix">
+    </div>
+""", unsafe_allow_html=True)
+
+# --- BANNER SUPERIOR DE MARCA ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
         <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</div>
-        <div class="official-logos-container">
-            <div class="store-badge-pill badge-exito">ÉXITO</div>
-            <div class="store-badge-pill badge-falabella">FALABELLA</div>
-            <div class="store-badge-pill badge-alkosto">ALKOSTO</div>
-            <div class="store-badge-pill badge-ktronix">KTRONIX</div>
-        </div>
     </div>
 """, unsafe_allow_html=True)
 
