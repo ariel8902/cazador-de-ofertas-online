@@ -16,80 +16,62 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS DE MARKETING Y DISEÑO VISUAL ---
+# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y DISEÑO PROFESIONAL ---
 st.markdown("""
     <style>
     /* Fondo general Gris Perla / Marfil Suave */
     .stApp {
         background-color: #F1F5F9;
+        margin-top: 0px;
     }
     
-    /* Barra superior de Marketing (Ticker de Avisos) */
-    .marketing-ticker {
-        background: linear-gradient(90deg, #1E293B 0%, #0F172A 100%);
-        color: #F8FAFC;
-        padding: 8px 15px;
-        text-align: center;
-        font-size: 0.9rem;
-        font-weight: 600;
-        letter-spacing: 0.5px;
-        border-radius: 8px;
-        margin-bottom: 15px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    /* Franja de Aliados Comerciales (Logos de Tiendas) */
-    .brand-logos-bar {
-        background-color: #FFFFFF;
-        padding: 12px 20px;
-        border-radius: 10px;
-        text-align: center;
-        margin-bottom: 20px;
-        border: 1px solid #E2E8F0;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
-    }
-    .store-badge {
-        display: inline-block;
-        padding: 6px 16px;
-        margin: 0 8px;
-        border-radius: 20px;
-        font-weight: 700;
-        font-size: 0.85rem;
-        letter-spacing: 0.5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
-    .badge-exito { background-color: #FEF08A; color: #854D0E; border: 1px solid #FACC15; }
-    .badge-falabella { background-color: #DCFCE7; color: #166534; border: 1px solid #4ADE80; }
-    .badge-alkosto { background-color: #E0F2FE; color: #0369A1; border: 1px solid #38BDF8; }
-    .badge-ktronix { background-color: #FEE2E2; color: #991B1B; border: 1px solid #F87171; }
-
-    /* Banner de Marca Fijo Superior (Firma Comercial) */
-    .brand-header {
+    /* Barra Superior Fija y Estática (Navbar de Marca y Logos Oficiales) */
+    .fixed-navbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
         background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-        padding: 25px 20px;
-        border-radius: 12px;
-        text-align: center;
         color: white;
-        box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
-        margin-bottom: 25px;
-        border-bottom: 4px solid #FF4B4B;
+        padding: 10px 25px;
+        z-index: 99999;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        border-bottom: 3px solid #FF4B4B;
     }
-    .brand-title {
-        font-size: 2.5rem;
+    .navbar-brand {
+        font-size: 1.4rem;
         font-weight: 900;
-        letter-spacing: 1px;
-        margin: 0;
+        letter-spacing: 0.5px;
         color: #FFFFFF;
         text-transform: uppercase;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
-    .brand-title span {
+    .navbar-brand span {
         color: #FF4B4B;
     }
-    .brand-subtitle {
-        font-size: 1rem;
-        color: #94A3B8;
-        margin-top: 6px;
-        font-weight: 400;
+    .navbar-logos {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-right: 40px;
+    }
+    .store-logo-img {
+        height: 28px;
+        background: white;
+        padding: 3px 8px;
+        border-radius: 6px;
+        object-fit: contain;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    /* Espaciado para compensar la barra fija superior */
+    .main-content-wrapper {
+        margin-top: 60px;
     }
 
     /* Tarjetas de Producto Modernas */
@@ -154,31 +136,24 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- TICKER DE MARKETING SUPERIOR ---
+# --- BARRA NAVEGADORA FIJA SUPERIOR (ESTÁTICA CON LOGOS OFICIALES) ---
 st.markdown("""
-    <div class="marketing-ticker">
-        🔥 ¡ALERTA DE PRECIOS BAJOS! • Descuentos reales del 50% al 80% verificados • Actualización automática 24/7 🚀
+    <div class="fixed-navbar">
+        <div class="navbar-brand">
+            🎯 CAZADOR DE <span>GANGAS</span>
+        </div>
+        <div class="navbar-logos">
+            <span style="font-size: 0.8rem; color: #94A3B8; font-weight: 600;">ALIADOS:</span>
+            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
+            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
+            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
+            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
-# --- FRANJA DE LOGOTIPOS DE ALIADOS COMERCIALES ---
-st.markdown("""
-    <div class="brand-logos-bar">
-        <span style="font-weight: 700; color: #475569; margin-right: 15px; font-size: 0.9rem;">ALIADOS OFICIALES:</span>
-        <span class="store-badge badge-exito">🟡 ÉXITO</span>
-        <span class="store-badge badge-falabella">🟢 FALABELLA</span>
-        <span class="store-badge badge-alkosto">🔵 ALKOSTO</span>
-        <span class="store-badge badge-ktronix">🔴 KTRONIX</span>
-    </div>
-""", unsafe_allow_html=True)
-
-# --- BANNER DE MARCA FIJO (FIRMA COMERCIAL) ---
-st.markdown("""
-    <div class="brand-header">
-        <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
-        <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables del mercado colombiano. ¡Págalo al mejor precio!</div>
-    </div>
-""", unsafe_allow_html=True)
+# Contenedor principal con margen superior para no solapar la barra fija
+st.markdown('<div class="main-content-wrapper"></div>', unsafe_allow_html=True)
 
 # Filtrar ofertas por almacén seleccionado
 ofertas_para_mostrar = st.session_state.gangas_guardadas
