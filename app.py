@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS (CORREGIDO SIN F-STRING PARA EVITAR ERRORES DE LLAVES) ---
+# --- ESTILOS CSS LIMPIOS ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -210,4 +210,15 @@ if ofertas_para_mostrar:
                 else:
                     st.markdown(f"⚪ **[ {tienda} ]**")
 
-                st.image(
+                st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
+                st.subheader(item.get("Nombre", "Producto"))
+                
+                st.markdown(f"❌ **Precio Regular:** ~{item.get('Precio Normal')}~")
+                st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
+                st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
+                st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
+                
+                if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
+                    st.session_state.clics += 1
+else:
+    st.info("ℹ️ No hay ofertas cargadas en este momento. Vuelva a consultar más tarde o ejecute el rastreo desde el panel de administración.")
