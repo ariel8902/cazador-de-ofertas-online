@@ -1,13 +1,15 @@
-name: Prueba Rapida ScraperAPI
+name: Actualizador Nocturno de Gangas (50%+)
 
 on:
-  workflow_dispatch:
+  schedule:
+    - cron: '0 5 * * *'  # Ejecución automática diaria
+  workflow_dispatch:      # Ejecución manual desde GitHub
 
 permissions:
   contents: write
 
 jobs:
-  probar:
+  actualizar:
     runs-on: ubuntu-latest
 
     steps:
@@ -21,16 +23,59 @@ jobs:
 
     - name: Instalar Dependencias
       run: |
+        python -m pip install --upgrade pip
         pip install requests beautifulsoup4
 
-    - name: Ejecutar Solo la Prueba
+    - name: Ejecutar Extractor Multitienda (Filtro 50%+)
       run: |
-        python prueba_rapida.py
+        python -c "
+        import json, sys
+
+        from exito import extraer_exito
+        from alkosto import extraer_alkosto
+        from ktronix import extraer_ktronix
+        from falabella import extraer_falabella
+
+        todas_ofertas = []
+
+        # 1. Éxito
+        try:
+            of_exito = extraer_exito()
+            todas_ofertas.extend(of_exito)
+        except Exception as e:
+            print('Error en Éxito:', e)
+
+        # 2. Alkosto
+        try:
+            of_alkosto = extraer_alkosto()
+            todas_ofertas.extend(of_alkosto)
+        except Exception as e:
+            print('Error en Alkosto:', e)
+
+        # 3. Ktronix
+        try:
+            of_ktronix = extraer_ktronix()
+            todas_ofertas.extend(of_ktronix)
+        except Exception as e:
+            print('Error en Ktronix:', e)
+
+        # 4. Falabella
+        try:
+            of_falabella = extraer_falabella()
+            todas_ofertas.extend(of_falabella)
+        except Exception as e:
+            print('Error en Falabella:', e)
+
+        print(f'=== TOTAL GENERAL GUARDADO: {len(todas_ofertas)} OFERTAS (>=50%) ===')
+
+        with open('ofertas.json', 'w', encoding='utf-8') as f:
+            json.dump(todas_ofertas, f, ensure_ascii=False, indent=2)
+        "
 
     - name: Guardar Cambios en GitHub
       run: |
         git config --global user.name 'github-actions[bot]'
         git config --global user.email 'github-actions[bot]@users.noreply.github.com'
         git add ofertas.json
-        git commit -m "🤖 Prueba rápida de ScraperAPI" || exit 0
+        git commit -m "🤖 Actualización automática de gangas (>=50%)" || exit 0
         git push
