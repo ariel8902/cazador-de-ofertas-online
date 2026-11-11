@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import json
 import os
+import base64
 
 from exito import extraer_exito
 from alkosto import extraer_alkosto
@@ -16,24 +17,37 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: LOGOS OFICIALES EN LA BARRA SUPERIOR FIJA ---
-st.markdown("""
+# Función para convertir imágenes locales a base64 para que carguen perfecto en HTML
+def obtener_base64_imagen(ruta):
+    if os.path.exists(ruta):
+        with open(ruta, "rb") as f:
+            data = f.read()
+        return base64.b64encode(data).decode("utf-8")
+    return ""
+
+img_exito = obtener_base64_imagen("exito.png")
+img_falabella = obtener_base64_imagen("falabella.png")
+img_alkosto = obtener_base64_imagen("alkosto.png")
+img_ktronix = obtener_base64_imagen("ktronix.png")
+
+# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y BANNER AMARILLO ---
+st.markdown(f"""
     <style>
     /* Fondo general de la aplicación */
-    .stApp {
+    .stApp {{
         background-color: #F8FAFC;
         margin-top: 15px;
-    }
+    }}
 
     /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
-    header[data-testid="stHeader"] {
+    header[data-testid="stHeader"] {{
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
-    }
+    }}
 
     /* Contenedor fijo, estático y perfectamente centrado en la franja blanca */
-    .top-fixed-logos-bar {
+    .top-fixed-logos-bar {{
         position: fixed;
         top: 6px;
         left: 50%;
@@ -41,72 +55,72 @@ st.markdown("""
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 35px;
+        gap: 30px;
         pointer-events: auto;
         background: #FFFFFF;
         padding: 4px 20px;
         border-radius: 8px;
         box-shadow: 0 1px 4px rgba(0,0,0,0.06);
-    }
+    }}
     
-    .store-logo-img {
-        height: 28px;
+    .store-logo-img {{
+        height: 26px;
         object-fit: contain;
         transition: transform 0.2s ease;
-    }
-    .store-logo-img:hover {
+    }}
+    .store-logo-img:hover {{
         transform: scale(1.1);
-    }
+    }}
 
-    /* Banner Principal de Marca con Estética Moderna */
-    .main-header-banner {
-        background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
-        padding: 30px 20px;
+    /* Banner Principal de Marca con Tonos Amarillos Elegantes */
+    .main-header-banner {{
+        background: linear-gradient(135deg, #FEF08A 0%, #FACC15 100%);
+        padding: 35px 20px;
         border-radius: 16px;
-        color: white;
-        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
+        color: #1E293B;
+        box-shadow: 0 10px 25px rgba(250, 204, 21, 0.25);
         margin-bottom: 30px;
-        border-top: 5px solid #FACC15;
-        border-bottom: 5px solid #FF4B4B;
+        border-top: 5px solid #1E293B;
+        border-bottom: 5px solid #DC2626;
         text-align: center;
     }
-    .brand-title {
+    .brand-title {{
         font-size: 2.8rem;
         font-weight: 900;
         margin: 0;
-        color: #FFFFFF;
+        color: #0F172A;
         letter-spacing: 1.5px;
         text-transform: uppercase;
     }
-    .brand-title span {
-        color: #FF4B4B;
-    }
-    .brand-subtitle {
+    .brand-title span {{
+        color: #DC2626;
+    }}
+    .brand-subtitle {{
         font-size: 1.05rem;
-        color: #94A3B8;
+        color: #334155;
         margin: 8px 0 0 0;
-        font-weight: 400;
+        font-weight: 600;
     }
 
     /* Tarjetas de Producto Modernas */
-    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {{
         background-color: #FFFFFF;
         border: 1px solid #CBD5E1;
         border-radius: 12px;
         padding: 15px;
         box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {
+    }}
+    div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {{
         transform: translateY(-3px);
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    }
+    }}
 
     /* Estilo de Botones */
-    .stButton>button {
+    .stButton>button {{
         border-radius: 8px;
         font-weight: 600;
-    }
+    }}
     </style>
 """, unsafe_allow_html=True)
 
@@ -150,17 +164,17 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES (EN LA RAÍZ) ---
-st.markdown("""
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS LOCALES EN BASE64 ---
+st.markdown(f"""
     <div class="top-fixed-logos-bar">
-        <img class="store-logo-img" src="exito.png" alt="Éxito">
-        <img class="store-logo-img" src="falabella.png" alt="Falabella">
-        <img class="store-logo-img" src="alkosto.png" alt="Alkosto">
-        <img class="store-logo-img" src="ktronix.png" alt="Ktronix">
+        <img class="store-logo-img" src="data:image/png;base64,{img_exito}" alt="Éxito">
+        <img class="store-logo-img" src="data:image/png;base64,{img_falabella}" alt="Falabella">
+        <img class="store-logo-img" src="data:image/png;base64,{img_alkosto}" alt="Alkosto">
+        <img class="store-logo-img" src="data:image/png;base64,{img_ktronix}" alt="Ktronix">
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR DE MARCA ---
+# --- BANNER SUPERIOR DE MARCA (AMARILLO ELEGANTE) ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
