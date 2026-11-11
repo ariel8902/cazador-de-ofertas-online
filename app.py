@@ -16,48 +16,45 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: BARRA FIJA SUPERIOR EN LA FRANJA BLANCA ---
+# --- ESTILOS CSS: LOGOS OFICIALES GRANDES Y CENTRADOS EN LA FRANJA SUPERIOR ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
     .stApp {
         background-color: #F1F5F9;
-        margin-top: 20px;
+        margin-top: 15px;
     }
 
-    /* Inyección de Barra Fija Estática en la Franja Superior de Streamlit */
+    /* Estilizar la barra superior nativa de Streamlit */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
     }
 
-    /* Contenedor flotante para los logos oficiales en la franja superior */
+    /* Contenedor fijo y perfectamente centrado para los logotipos en la franja blanca */
     .top-fixed-logos-bar {
         position: fixed;
-        top: 8px;
-        left: 70px;
+        top: 6px;
+        left: 50%;
+        transform: translateX(-50%);
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 15px;
+        gap: 25px;
         pointer-events: auto;
+        background: #FFFFFF;
+        padding: 4px 20px;
+        border-radius: 8px;
     }
     
-    .store-logo-box {
-        background: #FFFFFF;
-        border: 1px solid #CBD5E1;
-        padding: 3px 10px;
-        border-radius: 6px;
-        height: 28px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-    }
-    .store-logo-box img {
-        height: 18px;
+    .store-logo-img {
+        height: 32px;
         object-fit: contain;
+        transition: transform 0.2s ease;
+    }
+    .store-logo-img:hover {
+        transform: scale(1.08);
     }
 
     /* Tarjetas de Producto Modernas */
@@ -122,14 +119,13 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA DE LOGOS OFICIALES FIJA EN LA FRANJA SUPERIOR ---
+# --- BARRA DE LOGOS OFICIALES (GRANDES, SIN TEXTO Y FIJOS AL CENTRO SUPERIOR) ---
 st.markdown("""
     <div class="top-fixed-logos-bar">
-        <span style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Aliados:</span>
-        <div class="store-logo-box" title="Éxito"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito"></div>
-        <div class="store-logo-box" title="Falabella"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella"></div>
-        <div class="store-logo-box" title="Alkosto"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto"></div>
-        <div class="store-logo-box" title="Ktronix"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix"></div>
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
     </div>
 """, unsafe_allow_html=True)
 
