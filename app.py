@@ -3,7 +3,7 @@ import pandas as pd
 import json
 import os
 
-# Importar los extractores actualizados
+# Importar extractores
 from exito import extraer_exito
 from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
@@ -25,7 +25,7 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados de la sesión
+# Inicializar estados de sesión
 if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
@@ -35,17 +35,16 @@ if 'bot_token' not in st.session_state:
 if 'chat_id' not in st.session_state:
     st.session_state.chat_id = "@CazadorGangasBot"
 
-# --- CARGA AUTOMÁTICA DESDE OFERTAS.JSON (GITHUB ACTIONS) ---
-if 'gangas_guardadas' not in st.session_state:
-    st.session_state.gangas_guardadas = []
+# --- CARGAR OFERTAS DESDE OFERTAS.JSON AL ABRIR LA APP ---
+if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
     if os.path.exists("ofertas.json"):
         try:
             with open("ofertas.json", "r", encoding="utf-8") as f:
-                datos_json = json.load(f)
-                if isinstance(datos_json, list) and len(datos_json) > 0:
-                    st.session_state.gangas_guardadas = datos_json
-        except Exception as e:
-            pass
+                datos = json.load(f)
+                if isinstance(datos, list):
+                    st.session_state.gangas_guardadas = datos
+        except Exception:
+            st.session_state.gangas_guardadas = []
 
 # --- BARRA LATERAL ---
 st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
@@ -57,7 +56,7 @@ col_m2.metric("🖱️ Clics", st.session_state.clics, delta="+3")
 
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛠️ **Control de Extractores**")
-almacen = st.sidebar.selectbox("Elija el almacén a rastrear:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
+almacen = st.sidebar.selectbox("Elija el almacén a ver:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
 
 limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=20)
 
@@ -66,12 +65,6 @@ btn_limpiar = st.sidebar.button("🗑️ Limpiar Historial", use_container_width
 
 if btn_limpiar:
     st.session_state.gangas_guardadas = []
-    if os.path.exists("ofertas.json"):
-        try:
-            with open("ofertas.json", "w", encoding="utf-8") as f:
-                json.dump([], f)
-        except Exception:
-            pass
     st.rerun()
 
 # --- PANEL PRINCIPAL ---
@@ -82,39 +75,41 @@ tab1, tab2, tab3 = st.tabs(["🔥 **Ofertas Extraídas (>=50%)**", "📈 **Gesti
 
 with tab1:
     if btn_ejecutar:
-        with st.spinner(f"Rastreando gangas en {almacen}... Por favor espere."):
-            nuevos_resultados = []
+        with st.spinner(f"Rastreando en vivo {almacen}..."):
+            res = []
             if almacen == "Alkosto":
-                nuevos_resultados = extraer_alkosto()
-            elif almacen == "Éxito":
-                nuevos_resultados = extraer_exito()
+                res = extraer_alkosto()
+            elif almacen in ["Éxito", "Exito"]:
+                res = extraer_exito()
             elif almacen == "Ktronix":
-                nuevos_resultados = extraer_ktronix()
+                res = extraer_ktronix()
             elif almacen == "Falabella":
-                nuevos_resultados = extraer_falabella()
+                res = extraer_falabella()
             elif almacen == "Todos los Almacenes":
-                nuevos_resultados.extend(extraer_exito())
-                nuevos_resultados.extend(extraer_alkosto())
-                nuevos_resultados.extend(extraer_ktronix())
-                nuevos_resultados.extend(extraer_falabella())
+                res.extend(extraer_exito())
+                res.extend(extraer_alkosto())
+                res.extend(extraer_ktronix())
+                res.extend(extraer_falabella())
 
-            if nuevos_resultados:
-                st.session_state.gangas_guardadas = nuevos_resultados
-                with open("ofertas.json", "w", encoding="utf-8") as f:
-                    json.dump(nuevos_resultados, f, ensure_ascii=False, indent=2)
-                st.success(f"¡Se capturaron {len(nuevos_resultados)} gangas con 50%+ de descuento!")
+            if res:
+                st.session_state.gangas_guardadas = res
+                st.success(f"¡Se capturaron {len(res)} ofertas!")
             else:
-                st.warning(f"No se obtuvieron resultados para {almacen} en esta ejecución.")
+                st.warning("No se encontraron ofertas en la extracción en vivo. Mostrando las de GitHub Actions.")
 
-    # Filtrar según selección de la barra lateral
-    ofertas_a_mostrar = st.session_state.gangas_guardadas
-    if almacen != "Todos los Almacenes" and ofertas_a_mostrar:
-        ofertas_a_mostrar = [o for o in ofertas_a_mostrar if o.get("Almacen", "").lower() == almacen.lower()]
+    # Filtrar según el almacén seleccionado (Flexible a tildes y mayúsculas)
+    ofertas_para_mostrar = st.session_state.gangas_guardadas
+    if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
+        almacen_limpio = almacen.lower().replace("é", "e")
+        ofertas_para_mostrar = [
+            o for o in ofertas_para_mostrar 
+            if o.get("Almacen", "").lower().replace("é", "e") == almacen_limpio
+        ]
 
-    if ofertas_a_mostrar:
-        st.markdown(f"### 🛒 **Catálogo de Ofertas Capturadas ({len(ofertas_a_mostrar)} en pantalla)**")
+    if ofertas_para_mostrar:
+        st.markdown(f"### 🛒 **Catálogo de Ofertas ({len(ofertas_para_mostrar)} cargadas en {almacen})**")
         cols = st.columns(3)
-        for idx, item in enumerate(ofertas_a_mostrar[:limite_ofertas]):
+        for idx, item in enumerate(ofertas_para_mostrar[:limite_ofertas]):
             with cols[idx % 3]:
                 with st.container(border=True):
                     st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
@@ -126,30 +121,24 @@ with tab1:
                     if st.link_button(f"🔗 Ver Oferta #{idx+1}", item.get("Enlace Directo", "#")):
                         st.session_state.clics += 1
     else:
-        st.info("ℹ️ No hay ofertas cargadas para la selección actual. Presione 'Ejecutar Extracción Manual' o espere el ciclo nocturno de GitHub Actions.")
+        st.info("ℹ️ No hay ofertas para el almacén seleccionado en este momento. Seleccione 'Todos los Almacenes' o espere a la ejecución automática de GitHub Actions.")
 
 with tab2:
     st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
-    st.write("Estadísticas consolidadas sobre el comportamiento de los usuarios.")
-    
     col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Total Visitas Registradas", st.session_state.vistas)
-    col_b.metric("Total Clics Convertidos", st.session_state.clics)
-    
+    col_a.metric("Total Visitas", st.session_state.vistas)
+    col_b.metric("Total Clics", st.session_state.clics)
     ctr = (st.session_state.clics / st.session_state.vistas * 100) if st.session_state.vistas > 0 else 0
-    col_c.metric("Ratio de Clics (CTR)", f"{ctr:.1f}%")
+    col_c.metric("Ratio (CTR)", f"{ctr:.1f}%")
 
 with tab3:
     st.markdown("### 🤖 **Configuración de Alertas por Telegram**")
-    st.write("Ajuste las credenciales del bot encargado de notificar las ofertas capturadas.")
-    
     col_t1, col_t2 = st.columns(2)
     with col_t1:
-        token_input = st.text_input("Bot Token:", value=st.session_state.bot_token, type="password", placeholder="Ej: 123456789:ABCdef...")
+        token_input = st.text_input("Bot Token:", value=st.session_state.bot_token, type="password")
     with col_t2:
-        chat_input = st.text_input("Chat ID / Canal:", value=st.session_state.chat_id, placeholder="Ej: @CazadorGangasBot")
-        
-    if st.button("💾 Guardar Configuración de Telegram", type="primary"):
+        chat_input = st.text_input("Chat ID / Canal:", value=st.session_state.chat_id)
+    if st.button("💾 Guardar Configuración", type="primary"):
         st.session_state.bot_token = token_input
         st.session_state.chat_id = chat_input
-        st.success("✅ Configuración guardada correctamente.")
+        st.success("✅ Guardado.")
