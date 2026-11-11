@@ -39,10 +39,11 @@ if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_gua
 
 st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
 almacen = st.sidebar.selectbox("Elija el almacén a ver:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
-limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=20)
+limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=30)
 btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción Manual", use_container_width=True)
 
 st.markdown("<div class='main-title'>🎯 Panel de Control: Cazador de Gangas (En Vivo)</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>Vitrina inteligente de ofertas con 50% o más de descuento.</div>", unsafe_allow_html=True)
 
 tab1, tab2 = st.tabs(["🔥 **Ofertas Extraídas (>=50%)**", "📈 **Gestión y Analítica**"])
 
@@ -66,6 +67,9 @@ with tab1:
 
             if res:
                 st.session_state.gangas_guardadas = res
+                with open("ofertas.json", "w", encoding="utf-8") as f:
+                    json.dump(res, f, ensure_ascii=False, indent=2)
+                st.success(f"¡Se actualizaron {len(res)} ofertas con éxito!")
 
     ofertas_para_mostrar = st.session_state.gangas_guardadas
     if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
@@ -76,7 +80,7 @@ with tab1:
         ]
 
     if ofertas_para_mostrar:
-        st.markdown(f"### 🛒 **Catálogo de Ofertas ({len(ofertas_para_mostrar)} cargadas)**")
+        st.markdown(f"### 🛒 **Catálogo de Ofertas ({len(ofertas_para_mostrar)} disponibles)**")
         cols = st.columns(3)
         for idx, item in enumerate(ofertas_para_mostrar[:limite_ofertas]):
             with cols[idx % 3]:
@@ -98,14 +102,14 @@ with tab1:
                     st.subheader(item.get("Nombre", "Producto"))
                     
                     st.markdown(f"❌ **Precio Lista:** ~{item.get('Precio Normal')}~")
-                    st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta Exito', item.get('Precio Oferta'))}**")
+                    st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
                     st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
                     st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
                     
                     if st.link_button(f"🔗 Ver Oferta Directa #{idx+1}", item.get("Enlace Directo", "#")):
                         st.session_state.clics += 1
     else:
-        st.info("ℹ️ No hay ofertas para mostrar en la selección actual. Ejecute la extracción manual.")
+        st.info("ℹ️ No hay ofertas para mostrar en la selección actual. Presione 'Ejecutar Extracción Manual' o espere la sincronización.")
 
 with tab2:
     st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
