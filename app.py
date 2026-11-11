@@ -9,24 +9,27 @@ from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
 st.set_page_config(
-    page_title="Cazador de Gangas - Panel de Control",
+    page_title="Cazador de Gangas - Vitrina Oficial",
     page_icon="🎯",
     layout="wide"
 )
 
+# Estilos CSS Profesionales y Limpios
 st.markdown("""
     <style>
-    .main-title { font-size: 2.2rem; font-weight: 700; color: #FF4B4B; margin-bottom: 5px; }
-    .sub-title { font-size: 1rem; color: #FAFAFA; margin-bottom: 25px; }
-    .stButton>button { border-radius: 8px; }
+    .main-title { font-size: 2.5rem; font-weight: 800; color: #FF4B4B; margin-bottom: 0px; text-align: center; }
+    .sub-title { font-size: 1.1rem; color: #B0B0B0; margin-bottom: 30px; text-align: center; }
+    .stButton>button { border-radius: 8px; width: 100%; }
     </style>
 """, unsafe_allow_html=True)
 
+# Inicializar estados de sesión para métricas internas
 if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
     st.session_state.clics = 38
 
+# Cargar ofertas desde el JSON
 if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
     if os.path.exists("ofertas.json"):
         try:
@@ -37,84 +40,74 @@ if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_gua
         except Exception:
             st.session_state.gangas_guardadas = []
 
-st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
-almacen = st.sidebar.selectbox("Elija el almacén a ver:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
-limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=30)
-btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción Manual", use_container_width=True)
+# --- BARRA LATERAL (FILTROS PARA EL USUARIO) ---
+st.sidebar.markdown("## 🔍 **Filtrar Ofertas**")
+almacen = st.sidebar.selectbox("Seleccione Almacén:", ["Todos los Almacenes", "Éxito", "Falabella", "Alkosto", "Ktronix"])
 
-st.markdown("<div class='main-title'>🎯 Panel de Control: Cazador de Gangas (En Vivo)</div>", unsafe_allow_html=True)
-st.markdown("<div class='sub-title'>Vitrina inteligente de ofertas con 50% o más de descuento.</div>", unsafe_allow_html=True)
-
-tab1, tab2 = st.tabs(["🔥 **Ofertas Extraídas (>=50%)**", "📈 **Gestión y Analítica**"])
-
-with tab1:
+st.sidebar.markdown("---")
+# ACCESO RESTRINGIDO / PANEL DE ADMINISTRACIÓN (Oculto a la vista principal)
+with st.sidebar.expander("🛠️ Panel de Administración (Desarrollador)"):
+    st.markdown("### 📊 Métricas Internas")
+    st.metric("👁️ Vistas Totales", st.session_state.vistas)
+    st.metric("🖱️ Clics Totales", st.session_state.clics)
+    
+    btn_ejecutar = st.button("🚀 Forzar Extracción Manual")
     if btn_ejecutar:
-        with st.spinner(f"Rastreando en vivo {almacen}..."):
+        with st.spinner("Actualizando ofertas en vivo..."):
             res = []
-            if almacen in ["Éxito", "Exito"]:
-                res = extraer_exito()
-            elif almacen == "Alkosto":
-                res = extraer_alkosto()
-            elif almacen == "Ktronix":
-                res = extraer_ktronix()
-            elif almacen == "Falabella":
-                res = extraer_falabella()
-            elif almacen == "Todos los Almacenes":
-                res.extend(extraer_exito())
-                res.extend(extraer_falabella())
-                res.extend(extraer_alkosto())
-                res.extend(extraer_ktronix())
-
+            res.extend(extraer_exito())
+            res.extend(extraer_falabella())
+            res.extend(extraer_alkosto())
+            res.extend(extraer_ktronix())
             if res:
                 st.session_state.gangas_guardadas = res
                 with open("ofertas.json", "w", encoding="utf-8") as f:
                     json.dump(res, f, ensure_ascii=False, indent=2)
-                st.success(f"¡Se actualizaron {len(res)} ofertas con éxito!")
+                st.success(f"¡{len(res)} ofertas actualizadas!")
+                st.rerun()
 
-    ofertas_para_mostrar = st.session_state.gangas_guardadas
-    if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
-        almacen_limpio = almacen.lower().replace("é", "e")
-        ofertas_para_mostrar = [
-            o for o in ofertas_para_mostrar 
-            if o.get("Almacen", "").lower().replace("é", "e") == almacen_limpio
-        ]
+# --- CABECERA PRINCIPAL DE LA VITRINA ---
+st.markdown("<div class='main-title'>🎯 CAZADOR DE GANGAS</div>", unsafe_allow_html=True)
+st.markdown("<div class='sub-title'>Las mejores ofertas exclusivas de Colombia con 50% o más de descuento en tiempo real.</div>", unsafe_allow_html=True)
 
-    if ofertas_para_mostrar:
-        st.markdown(f"### 🛒 **Catálogo de Ofertas ({len(ofertas_para_mostrar)} disponibles)**")
-        cols = st.columns(3)
-        for idx, item in enumerate(ofertas_para_mostrar[:limite_ofertas]):
-            with cols[idx % 3]:
-                with st.container(border=True):
-                    # Insignia de Color por Almacén
-                    tienda = item.get('Almacen', 'Desconocido')
-                    if tienda == "Éxito":
-                        st.markdown("🟡 **[ ÉXITO ]**")
-                    elif tienda == "Falabella":
-                        st.markdown("🟢 **[ FALABELLA ]**")
-                    elif tienda == "Alkosto":
-                        st.markdown("🔵 **[ ALKOSTO ]**")
-                    elif tienda == "Ktronix":
-                        st.markdown("🔴 **[ KTRONIX ]**")
-                    else:
-                        st.markdown(f"⚪ **[ {tienda} ]**")
+# Filtrar ofertas por almacén seleccionado
+ofertas_para_mostrar = st.session_state.gangas_guardadas
+if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
+    almacen_limpio = almacen.lower().replace("é", "e")
+    ofertas_para_mostrar = [
+        o for o in ofertas_para_mostrar 
+        if o.get("Almacen", "").lower().replace("é", "e") == almacen_limpio
+    ]
 
-                    st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
-                    st.subheader(item.get("Nombre", "Producto"))
-                    
-                    st.markdown(f"❌ **Precio Lista:** ~{item.get('Precio Normal')}~")
-                    st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
-                    st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
-                    st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
-                    
-                    if st.link_button(f"🔗 Ver Oferta Directa #{idx+1}", item.get("Enlace Directo", "#")):
-                        st.session_state.clics += 1
-    else:
-        st.info("ℹ️ No hay ofertas para mostrar en la selección actual. Presione 'Ejecutar Extracción Manual' o espere la sincronización.")
+# --- RENDERIZADO DE LA VITRINA (TODAS LAS OFERTAS SIN LÍMITES) ---
+if ofertas_para_mostrar:
+    st.markdown(f"### 🔥 **Oportunidades Encontradas ({len(ofertas_para_mostrar)} productos disponibles)**")
+    cols = st.columns(3)
+    for idx, item in enumerate(ofertas_para_mostrar):
+        with cols[idx % 3]:
+            with st.container(border=True):
+                # Insignia de Color Institucional por Almacén
+                tienda = item.get('Almacen', 'Desconocido')
+                if tienda == "Éxito":
+                    st.markdown("🟡 **[ ÉXITO ]**")
+                elif tienda == "Falabella":
+                    st.markdown("🟢 **[ FALABELLA ]**")
+                elif tienda == "Alkosto":
+                    st.markdown("🔵 **[ ALKOSTO ]**")
+                elif tienda == "Ktronix":
+                    st.markdown("🔴 **[ KTRONIX ]**")
+                else:
+                    st.markdown(f"⚪ **[ {tienda} ]**")
 
-with tab2:
-    st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
-    col_a, col_b, col_c = st.columns(3)
-    col_a.metric("Total Visitas", st.session_state.vistas)
-    col_b.metric("Total Clics", st.session_state.clics)
-    ctr = (st.session_state.clics / st.session_state.vistas * 100) if st.session_state.vistas > 0 else 0
-    col_c.metric("Ratio (CTR)", f"{ctr:.1f}%")
+                st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
+                st.subheader(item.get("Nombre", "Producto"))
+                
+                st.markdown(f"❌ **Precio Regular:** ~{item.get('Precio Normal')}~")
+                st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
+                st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
+                st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
+                
+                if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
+                    st.session_state.clics += 1
+else:
+    st.info("ℹ️ No hay ofertas disponibles en este momento para la selección actual. Vuelva a consultar más tarde o ejecute una actualización desde el panel de administración.")
