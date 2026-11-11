@@ -3,20 +3,17 @@ import pandas as pd
 import json
 import os
 
-# Importar extractores
 from exito import extraer_exito
 from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
-# Configuración inicial de la página
 st.set_page_config(
     page_title="Cazador de Gangas - Panel de Control",
     page_icon="🎯",
     layout="wide"
 )
 
-# Estilos CSS
 st.markdown("""
     <style>
     .main-title { font-size: 2.2rem; font-weight: 700; color: #FF4B4B; margin-bottom: 5px; }
@@ -25,7 +22,6 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados de sesión
 if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
@@ -35,7 +31,6 @@ if 'bot_token' not in st.session_state:
 if 'chat_id' not in st.session_state:
     st.session_state.chat_id = "@CazadorGangasBot"
 
-# --- CARGAR OFERTAS DESDE OFERTAS.JSON AL ABRIR LA APP ---
 if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
     if os.path.exists("ofertas.json"):
         try:
@@ -46,9 +41,7 @@ if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_gua
         except Exception:
             st.session_state.gangas_guardadas = []
 
-# --- BARRA LATERAL ---
 st.sidebar.markdown("## ⚙️ **Gestión de Aplicación**")
-
 st.sidebar.markdown("### 📊 **Métricas en Tiempo Real**")
 col_m1, col_m2 = st.sidebar.columns(2)
 col_m1.metric("👁️ Vistas", st.session_state.vistas, delta="+1")
@@ -57,7 +50,6 @@ col_m2.metric("🖱️ Clics", st.session_state.clics, delta="+3")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### 🛠️ **Control de Extractores**")
 almacen = st.sidebar.selectbox("Elija el almacén a ver:", ["Todos los Almacenes", "Éxito", "Alkosto", "Falabella", "Ktronix"])
-
 limite_ofertas = st.sidebar.slider("Número máximo de ofertas:", min_value=5, max_value=50, value=20)
 
 btn_ejecutar = st.sidebar.button("🚀 Ejecutar Extracción Manual", use_container_width=True)
@@ -67,7 +59,6 @@ if btn_limpiar:
     st.session_state.gangas_guardadas = []
     st.rerun()
 
-# --- PANEL PRINCIPAL ---
 st.markdown("<div class='main-title'>🎯 Panel de Control: Cazador de Gangas (En Vivo)</div>", unsafe_allow_html=True)
 st.markdown("<div class='sub-title'>Gestiona la plataforma, analiza clics e interacciones y visualiza ofertas con 50%+ de descuento.</div>", unsafe_allow_html=True)
 
@@ -93,11 +84,10 @@ with tab1:
 
             if res:
                 st.session_state.gangas_guardadas = res
-                st.success(f"¡Se capturaron {len(res)} ofertas!")
+                st.success(f"¡Se capturaron {len(res)} ofertas con 50%+ de descuento!")
             else:
-                st.warning("No se encontraron ofertas en la extracción en vivo. Mostrando las de GitHub Actions.")
+                st.warning("No se encontraron ofertas nuevas en tiempo real. Mostrando historial guardado.")
 
-    # Filtrar según el almacén seleccionado (Flexible a tildes y mayúsculas)
     ofertas_para_mostrar = st.session_state.gangas_guardadas
     if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
         almacen_limpio = almacen.lower().replace("é", "e")
@@ -118,10 +108,11 @@ with tab1:
                     st.markdown(f"**Precio Normal:** ~{item.get('Precio Normal')}~")
                     st.markdown(f"**Precio Oferta:** `{item.get('Precio Oferta')}`")
                     st.markdown(f"**Descuento:** 🔥 `{item.get('Descuento')}`")
+                    st.markdown(f"**Medio de Pago:** 💳 `{item.get('Medio Pago', 'Cualquier Medio')}`")
                     if st.link_button(f"🔗 Ver Oferta #{idx+1}", item.get("Enlace Directo", "#")):
                         st.session_state.clics += 1
     else:
-        st.info("ℹ️ No hay ofertas para el almacén seleccionado en este momento. Seleccione 'Todos los Almacenes' o espere a la ejecución automática de GitHub Actions.")
+        st.info("ℹ️ No hay ofertas para el almacén seleccionado. Ejecute la extracción o seleccione 'Todos los Almacenes'.")
 
 with tab2:
     st.markdown("### 📊 **Rendimiento y Métricas de Uso**")
@@ -141,4 +132,4 @@ with tab3:
     if st.button("💾 Guardar Configuración", type="primary"):
         st.session_state.bot_token = token_input
         st.session_state.chat_id = chat_input
-        st.success("✅ Guardado.")
+        st.success("✅ Configuración guardada correctamente.")
