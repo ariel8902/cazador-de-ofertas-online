@@ -6,7 +6,7 @@ from bs4 import BeautifulSoup
 API_KEY = "392e8624ae3a6701c44394bc61223b66"
 
 def extraer_falabella():
-    print("--- [FALABELLA] Rastreando Ofertas (Filtro >= 50%) ---")
+    print("--- [FALABELLA] Rastreando Ofertas Reales (>= 50%) ---")
     categorias = [
         ("https://www.falabella.com.co/falabella-co/category/cat1361001/Tecnologia", "Tecnología"),
         ("https://www.falabella.com.co/falabella-co/category/cat50611/Electrodomesticos", "Electrodomésticos")
@@ -25,18 +25,35 @@ def extraer_falabella():
             res = requests.get("http://api.scraperapi.com", params=payload, timeout=90)
             if res.status_code == 200:
                 soup = BeautifulSoup(res.text, "html.parser")
-                tarjetas = soup.find_all("div", class_=lambda x: x and ("pod" in str(x).lower() or "product" in str(x).lower())) or soup.find_all("article")
+                tarjetas = soup.find_all(["div", "article"], class_=lambda x: x and ("pod" in str(x).lower() or "product" in str(x).lower()))
                 
-                for prod in tarjetas[:20]:
-                    nombre_elem = prod.find(["b", "h3", "h2", "span"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower() or "pod-title" in str(x).lower()))
-                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Falabella"
-                    
+                for prod in tarjetas[:30]:
+                    # 1. Enlace y filtro de producto individual
                     link_elem = prod.find("a", href=True)
                     if not link_elem:
                         continue
                     enlace_raw = link_elem['href']
+                    if "/product/" not in enlace_raw and "-prod" not in enlace_raw:
+                        continue
                     enlace = f"https://www.falabella.com.co{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
+                    # 2. Nombre
+                    nombre_elem = prod.find(["b", "h3", "h2", "span"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower()))
+                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Falabella"
+                    if len(nombre) < 5:
+                        continue
+
+                    # 3. Imagen real
+                    img_elem = prod.find("img")
+                    imagen = "https://via.placeholder.com/200?text=Falabella"
+                    if img_elem:
+                        src = img_elem.get("src") or img_elem.get("data-src") or img_elem.get("srcset")
+                        if src and "http" in str(src):
+                            imagen = src.split()[0]
+                        elif src and str(src).startswith("//"):
+                            imagen = "https:" + src.split()[0]
+
+                    # 4. Precios (Normal, Tarjeta CMR y Otros Medios)
                     texto = prod.get_text(separator=" ", strip=True)
                     precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
                     precios_num = []
@@ -46,30 +63,29 @@ def extraer_falabella():
                             precios_num.append(num)
                     
                     precios_num = sorted(list(set(precios_num)), reverse=True)
-                    if not precios_num:
+                    if len(precios_num) < 2:
                         continue
                         
-                    precio_alto = precios_num[0]
-                    precio_oferta = precios_num[-1] if len(precios_num) >= 2 else precio_alto
+                    precio_normal = precios_num[0]
+                    precio_oferta = precios_num[-1]
+                    precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
                     
-                    descuento = 0
-                    if precio_alto > precio_oferta:
-                        descuento = int(((precio_alto - precio_oferta) / precio_alto) * 100)
+                    descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
                     
-                    # FILTRO 50%+ DE DESCUENTO
                     if descuento >= 50:
                         ofertas.append({
                             "Nombre": nombre,
-                            "Precio Normal": f"${precio_alto:,.0f}".replace(",", "."),
+                            "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
+                            "Precio Tarjeta Exito": f"${precio_tarjeta:,.0f}".replace(",", "."), # Usado para Tarjeta CMR
                             "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
                             "Descuento": f"-{descuento}%",
                             "Enlace Directo": enlace,
-                            "Imagen": "https://via.placeholder.com/200?text=Falabella",
+                            "Imagen": imagen,
                             "Almacen": "Falabella",
                             "Categoria": cat
                         })
         except Exception as e:
             print(f"Error en Falabella ({cat}): {e}")
             
-    print(f"Falabella aportó: {len(ofertas)} ofertas de 50%+ de descuento")
+    print(f"Falabella aportó: {len(ofertas)} ofertas de 50%+")
     return ofertas
