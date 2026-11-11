@@ -16,47 +16,68 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y LOGOTIPOS OFICIALES ---
+# --- ESTILOS CSS PROFESIONALES Y LIMPIOS ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
     .stApp {
         background-color: #F1F5F9;
-        margin-top: 15px;
     }
 
-    /* Estilizar la barra superior nativa de Streamlit */
-    header[data-testid="stHeader"] {
-        background-color: #FFFFFF !important;
-        border-bottom: 1px solid #E2E8F0 !important;
-        visibility: visible !important;
+    /* Banner Principal de Marca con Logos Oficiales Integrados */
+    .main-header-banner {
+        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+        padding: 30px 20px;
+        border-radius: 14px;
+        color: white;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+        margin-bottom: 30px;
+        border-bottom: 4px solid #FF4B4B;
+        text-align: center;
     }
-
-    /* Contenedor fijo y perfectamente centrado en la franja superior */
-    .top-fixed-logos-bar {
-        position: fixed;
-        top: 6px;
-        left: 50%;
-        transform: translateX(-50%);
-        z-index: 999999;
-        display: flex;
-        align-items: center;
-        gap: 30px;
-        pointer-events: auto;
-        background: #FFFFFF;
-        padding: 4px 20px;
-        border-radius: 8px;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+    .brand-title {
+        font-size: 2.8rem;
+        font-weight: 900;
+        margin: 0;
+        color: #FFFFFF;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+    }
+    .brand-title span {
+        color: #FF4B4B;
+    }
+    .brand-subtitle {
+        font-size: 1.05rem;
+        color: #94A3B8;
+        margin: 8px 0 20px 0;
     }
     
-    .store-logo-img {
-        height: 25px;
-        object-fit: contain;
-        transition: transform 0.2s ease;
+    /* Contenedor de Logos Oficiales Centrales */
+    .official-logos-container {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 20px;
+        background: rgba(255, 255, 255, 0.1);
+        padding: 10px 25px;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
-    .store-logo-img:hover {
-        transform: scale(1.1);
+    .store-badge-pill {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 6px 16px;
+        border-radius: 20px;
+        font-weight: 800;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
     }
+    .badge-exito { background-color: #FACC15; color: #713F12; }
+    .badge-falabella { background-color: #84CC16; color: #1A2E05; }
+    .badge-alkosto { background-color: #0EA5E9; color: #0C4A6E; }
+    .badge-ktronix { background-color: #EF4444; color: #450A0A; }
 
     /* Tarjetas de Producto Modernas */
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
@@ -120,22 +141,18 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES (OPTIMIZADOS) ---
+# --- BANNER SUPERIOR DE MARCA CON LOGOTIPOS OFICIALES VISIBLES Y CENTRADOS ---
 st.markdown("""
-    <div class="top-fixed-logos-bar">
-        <img class="store-logo-img" src="https://raw.githubusercontent.com/intellij-rust/intellij-rust.github.io/master/assets/images/logo.png" style="display:none;" onerror="this.style.display='none'">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="">
-    </div>
-""", unsafe_allow_html=True)
-
-# --- TÍTULO PRINCIPAL DE LA MARCA ---
-st.markdown("""
-    <div style="margin-top: 10px; margin-bottom: 25px; text-align: center;">
-        <h1 style="font-size: 2.2rem; font-weight: 900; color: #0F172A; text-transform: uppercase; margin: 0;">🎯 CAZADOR DE <span style="color: #FF4B4B;">GANGAS</span></h1>
-        <p style="color: #64748B; font-size: 0.95rem; margin-top: 5px;">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</p>
+    <div class="main-header-banner">
+        <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
+        <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</div>
+        <div class="official-logos-container">
+            <span style="font-size: 0.8rem; color: #E2E8F0; font-weight: 700; margin-right: 5px;">ALIADOS OFICIALES:</span>
+            <div class="store-badge-pill badge-exito">🟡 ÉXITO</div>
+            <div class="store-badge-pill badge-falabella">🟢 FALABELLA</div>
+            <div class="store-badge-pill badge-alkosto">🔵 ALKOSTO</div>
+            <div class="store-badge-pill badge-ktronix">🔴 KTRONIX</div>
+        </div>
     </div>
 """, unsafe_allow_html=True)
 
@@ -150,7 +167,7 @@ if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
 
 # --- VITRINA DE PRODUCTOS ---
 if ofertas_para_mostrar:
-    st.markdown(f"### 🛒 **Oportunidades Disponibles ({len(ofertas_para_mostrar)} productos)**")
+    st.markdown(f"### 🛒 **Oportunidades Disponibles ({len(ofertas_para_mostrar)} products)**")
     cols = st.columns(3)
     for idx, item in enumerate(ofertas_para_mostrar):
         with cols[idx % 3]:
@@ -159,7 +176,7 @@ if ofertas_para_mostrar:
                 if tienda == "Éxito":
                     st.markdown("🟡 **[ ÉXITO ]**")
                 elif tienda == "Falabella":
-                    st.png("🟢 **[ FALABELLA ]**") if False else st.markdown("🟢 **[ FALABELLA ]**")
+                    st.markdown("🟢 **[ FALABELLA ]**")
                 elif tienda == "Alkosto":
                     st.markdown("🔵 **[ ALKOSTO ]**")
                 elif tienda == "Ktronix":
