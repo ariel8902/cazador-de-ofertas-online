@@ -22,7 +22,7 @@ def extraer_exito():
             soup = BeautifulSoup(res.text, "html.parser")
             tarjetas = soup.find_all(["article", "div"], class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower()))
             
-            for prod in tarjetas[:30]:
+            for prod in tarjetas[:40]:
                 link_elem = prod.find("a", href=True)
                 if not link_elem:
                     continue
@@ -75,7 +75,7 @@ def extraer_exito():
                     ofertas.append({
                         "Nombre": nombre,
                         "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
-                        "Precio Tarjeta Exito": f"${precio_tarjeta:,.0f}".replace(",", "."),
+                        "Precio Tarjeta": f"${precio_tarjeta:,.0f}".replace(",", "."),
                         "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
                         "Descuento": f"-{descuento}%",
                         "Enlace Directo": enlace,
