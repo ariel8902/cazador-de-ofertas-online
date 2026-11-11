@@ -16,12 +16,12 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS AVANZADOS DE MARKETING Y DISEÑO VISUAL ---
+# --- ESTILOS CSS DE MARKETING Y DISEÑO VISUAL ---
 st.markdown("""
     <style>
-    /* Fondo general Blanco Hueso / Marfil Suave */
+    /* Fondo general Gris Perla / Marfil Suave */
     .stApp {
-        background-color: #F4F6F9;
+        background-color: #F1F5F9;
     }
     
     /* Barra superior de Marketing (Ticker de Avisos) */
@@ -33,24 +33,49 @@ st.markdown("""
         font-size: 0.9rem;
         font-weight: 600;
         letter-spacing: 0.5px;
-        border-radius: 6px;
-        margin-bottom: 20px;
+        border-radius: 8px;
+        margin-bottom: 15px;
         box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
+
+    /* Franja de Aliados Comerciales (Logos de Tiendas) */
+    .brand-logos-bar {
+        background-color: #FFFFFF;
+        padding: 12px 20px;
+        border-radius: 10px;
+        text-align: center;
+        margin-bottom: 20px;
+        border: 1px solid #E2E8F0;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .store-badge {
+        display: inline-block;
+        padding: 6px 16px;
+        margin: 0 8px;
+        border-radius: 20px;
+        font-weight: 700;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+    }
+    .badge-exito { background-color: #FEF08A; color: #854D0E; border: 1px solid #FACC15; }
+    .badge-falabella { background-color: #DCFCE7; color: #166534; border: 1px solid #4ADE80; }
+    .badge-alkosto { background-color: #E0F2FE; color: #0369A1; border: 1px solid #38BDF8; }
+    .badge-ktronix { background-color: #FEE2E2; color: #991B1B; border: 1px solid #F87171; }
 
     /* Banner de Marca Fijo Superior (Firma Comercial) */
     .brand-header {
         background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-        padding: 30px 20px;
+        padding: 25px 20px;
         border-radius: 12px;
         text-align: center;
         color: white;
         box-shadow: 0 4px 20px rgba(15, 23, 42, 0.15);
-        margin-bottom: 30px;
+        margin-bottom: 25px;
         border-bottom: 4px solid #FF4B4B;
     }
     .brand-title {
-        font-size: 2.8rem;
+        font-size: 2.5rem;
         font-weight: 900;
         letter-spacing: 1px;
         margin: 0;
@@ -61,24 +86,24 @@ st.markdown("""
         color: #FF4B4B;
     }
     .brand-subtitle {
-        font-size: 1.1rem;
+        font-size: 1rem;
         color: #94A3B8;
-        margin-top: 8px;
+        margin-top: 6px;
         font-weight: 400;
     }
 
     /* Tarjetas de Producto Modernas */
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
         background-color: #FFFFFF;
-        border: 1px solid #E2E8F0;
+        border: 1px solid #CBD5E1;
         border-radius: 12px;
         padding: 15px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"]:hover {
         transform: translateY(-3px);
-        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
     /* Estilo de Botones */
@@ -129,10 +154,21 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- TICKER DE MARKETING SUPERIOR (Dinámico por temporada) ---
+# --- TICKER DE MARKETING SUPERIOR ---
 st.markdown("""
     <div class="marketing-ticker">
         🔥 ¡ALERTA DE PRECIOS BAJOS! • Descuentos reales del 50% al 80% verificados • Actualización automática 24/7 🚀
+    </div>
+""", unsafe_allow_html=True)
+
+# --- FRANJA DE LOGOTIPOS DE ALIADOS COMERCIALES ---
+st.markdown("""
+    <div class="brand-logos-bar">
+        <span style="font-weight: 700; color: #475569; margin-right: 15px; font-size: 0.9rem;">ALIADOS OFICIALES:</span>
+        <span class="store-badge badge-exito">🟡 ÉXITO</span>
+        <span class="store-badge badge-falabella">🟢 FALABELLA</span>
+        <span class="store-badge badge-alkosto">🔵 ALKOSTO</span>
+        <span class="store-badge badge-ktronix">🔴 KTRONIX</span>
     </div>
 """, unsafe_allow_html=True)
 
@@ -160,7 +196,6 @@ if ofertas_para_mostrar:
     for idx, item in enumerate(ofertas_para_mostrar):
         with cols[idx % 3]:
             with st.container(border=True):
-                # Insignia de Color Institucional
                 tienda = item.get('Almacen', 'Desconocido')
                 if tienda == "Éxito":
                     st.markdown("🟡 **[ ÉXITO ]**")
