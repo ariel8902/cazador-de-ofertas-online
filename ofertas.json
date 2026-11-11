@@ -1,32 +1,112 @@
 [
   {
-    "Nombre": "Soporte Tv Fijo De 32 A 60 Sf60 Soportv",
-    "Enlace Directo": "https://www.exito.com/soporte-fijo-tv-32-a-60-26707/p",
-    "Almacen": "Éxito (Prueba)",
-    "Estado": "OK - ScraperAPI Funcionando"
-  },
-  {
     "Nombre": "Televisor SAMSUNG 58 pulgadas LED Uhd4K Smart TV UN58U8000HKXZL",
+    "Precio Normal": "$3.339.900",
+    "Precio Oferta": "$1.619.506",
+    "Descuento": "-51%",
     "Enlace Directo": "https://www.exito.com/televisor-samsung-58-pulgadas-led-uhd-4k-smart-tv-un58u8000hkxzl-3254967/p",
-    "Almacen": "Éxito (Prueba)",
-    "Estado": "OK - ScraperAPI Funcionando"
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
   },
   {
     "Nombre": "Televisor Hisense 50 Pulgadas Qled Fhd Smart Tv 50Q4sv",
+    "Precio Normal": "$2.299.900",
+    "Precio Oferta": "$973.406",
+    "Descuento": "-57%",
     "Enlace Directo": "https://www.exito.com/televisor-hisense-50-pulgadas-qled-fhd-smart-tv-50q4sv-3242628/p",
-    "Almacen": "Éxito (Prueba)",
-    "Estado": "OK - ScraperAPI Funcionando"
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
   },
   {
     "Nombre": "Televisor Tcl 50 Pulgadas Qled Fhd Smart Tv 50S5k",
+    "Precio Normal": "$2.299.900",
+    "Precio Oferta": "$1.097.904",
+    "Descuento": "-52%",
     "Enlace Directo": "https://www.exito.com/televisor-tcl-50-pulgadas-qled-fhd-smart-tv-50s5k-3234406/p",
-    "Almacen": "Éxito (Prueba)",
-    "Estado": "OK - ScraperAPI Funcionando"
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
   },
   {
-    "Nombre": "Microsoft 365 Personal 12 Meses MICROSOFT  Licencia Computador",
-    "Enlace Directo": "https://www.exito.com/microsoft-365-personal-12-meses-2025-microsoft-ep2-32295-3212043/p",
-    "Almacen": "Éxito (Prueba)",
-    "Estado": "OK - ScraperAPI Funcionando"
+    "Nombre": "Televisor SAMSUNG 50 pulgadas Mini LED Fhd Smart TV UN50M60HAKXZL",
+    "Precio Normal": "$2.999.900",
+    "Precio Oferta": "$1.179.904",
+    "Descuento": "-60%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-mini-led-uhd-4k-smart-tv-un50m60hakxzl-3263624/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor TCL 65 pulgadas LED Uhd4K Smart TV 65V6C",
+    "Precio Normal": "$4.799.900",
+    "Precio Oferta": "$1.907.904",
+    "Descuento": "-60%",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-65-pulgadas-led-uhd-4k-smart-tv-65v6c-3248709/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor HISENSE 58 pulgadas LED Uhd4K Smart TV 58A6NV",
+    "Precio Normal": "$3.599.900",
+    "Precio Oferta": "$1.319.905",
+    "Descuento": "-63%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-58-pulgadas-led-uhd-4k-smart-tv-58a6nv-3208349/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor Samsung 50 Pulgadas Led Uhd4k Smart Tv Un50u8000fkxzl",
+    "Precio Normal": "$2.699.900",
+    "Precio Oferta": "$1.314.900",
+    "Descuento": "-51%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-led-uhd-4k-smart-tv-un50u8000fkxzl-3209289/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor HISENSE 65 pulgadas QLED Uhd4K Smart TV 65QD5SV",
+    "Precio Normal": "$4.099.900",
+    "Precio Oferta": "$1.835.904",
+    "Descuento": "-55%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-65-pulgadas-qled-uhd-4k-smart-tv-65qd5sv-3245570/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Televisor CAIXUN 55 pulgadas QLED Uhd4K Smart TV C55KAUGQ",
+    "Precio Normal": "$3.999.900",
+    "Precio Oferta": "$1.279.903",
+    "Descuento": "-68%",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-55-pulgadas-qled-uhd-4k-smart-tv-c55kaugq-3255839/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Cable Original Apple Usb Tipo C A Conector Lightning 2 Metros",
+    "Precio Normal": "$89.900",
+    "Precio Oferta": "$24.831",
+    "Descuento": "-72%",
+    "Enlace Directo": "https://www.exito.com/cable-original-apple-usb-tipo-c-a-conector-lightning-2-mt-100054636-mp/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
+  },
+  {
+    "Nombre": "Barra De Sonido Hisense Hs1000 120 W 2.0 Canales 120W Negro",
+    "Precio Normal": "$549.900",
+    "Precio Oferta": "$199.876",
+    "Descuento": "-63%",
+    "Enlace Directo": "https://www.exito.com/barra-de-sonido-hisense-hs1000-120-w-20-120w-negro-3218632/p",
+    "Imagen": "https://via.placeholder.com/200?text=Exito",
+    "Almacen": "Éxito",
+    "Categoria": "Tecnología"
   }
 ]
