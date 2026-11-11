@@ -9,15 +9,15 @@ from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
-# Configuración de página con diseño ancho y título técnico
+# Configuración de página con la nueva marca comercial
 st.set_page_config(
-    page_title="Smart Ofertas Colombia | Vitrina Oficial",
+    page_title="Cazador de Ofertas Online | Vitrina Oficial",
     page_icon="🎯",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
-# Función para convertir imágenes locales a base64 para que carguen perfecto en HTML
+# Función para convertir imágenes locales a base64
 def obtener_base64_imagen(ruta):
     if os.path.exists(ruta):
         with open(ruta, "rb") as f:
@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: LOGOS GRANDES Y BANNER COMPACTO CORPORATIVO ---
+# --- ESTILOS CSS: LOGOS GRANDES Y BANNER COMPACTO CON NUEVO TÍTULO ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -39,7 +39,7 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
+    /* Estilizar la barra superior nativa para que sea fija y limpia */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
@@ -64,7 +64,7 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 58px; /* Logotipos imponentes */
+        height: 58px; /* Logotipos grandes */
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -72,7 +72,7 @@ st.markdown("""
         transform: scale(1.08);
     }
 
-    /* Banner Principal Compacto y Técnico */
+    /* Banner Principal Compacto */
     .main-header-banner {
         background: #FFD100; /* Amarillo puro brillante estilo Éxito */
         padding: 12px 20px;
@@ -175,11 +175,11 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR TÉCNICO Y COMERCIAL ---
+# --- BANNER SUPERIOR CON LA NUEVA MARCA MARCADA ---
 st.markdown("""
     <div class="main-header-banner">
-        <div class="brand-title">🎯 SMART <span>OFERTAS</span> COLOMBIA</div>
-        <div class="brand-subtitle">La vitrina inteligente con las oportunidades más implacables del mercado (Descuentos reales ≥ 50%)</div>
+        <div class="brand-title">🎯 CAZADOR DE <span>OFERTAS ONLINE</span></div>
+        <div class="brand-subtitle">La vitrina inteligente con los descuentos más implacables de Colombia (Descuentos reales ≥ 50%)</div>
     </div>
 """, unsafe_allow_html=True)
 
