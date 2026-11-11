@@ -1,4 +1,3 @@
-import os
 import json
 import re
 import requests
@@ -7,7 +6,7 @@ from bs4 import BeautifulSoup
 API_KEY = "392e8624ae3a6701c44394bc61223b66"
 URL_PRUEBA = "https://www.exito.com/tecnologia"
 
-print("--- [PRUEBA DE FUEGO] Iniciando rastreo en Éxito Tecnología ---")
+print("--- [PRUEBA RÁPIDA] Probando ScraperAPI en Éxito Tecnología ---")
 
 endpoint = "http://api.scraperapi.com"
 payload = {
@@ -19,15 +18,15 @@ payload = {
 
 try:
     respuesta = requests.get(endpoint, params=payload, timeout=90)
-    print(f"Estado HTTP devuelto por ScraperAPI: {respuesta.status_code}")
+    print(f"--> Código HTTP devuelto por ScraperAPI: {respuesta.status_code}")
     
     if respuesta.status_code == 200:
         soup = BeautifulSoup(respuesta.text, "html.parser")
         tarjetas = soup.find_all("article") or soup.find_all("div", class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower()))
-        print(f"Tarjetas de producto detectadas: {len(tarjetas)}")
+        print(f"--> Tarjetas de producto encontradas: {len(tarjetas)}")
         
         ofertas = []
-        for prod in tarjetas[:10]:
+        for prod in tarjetas[:5]:
             nombre_elem = prod.find(["h3", "h2", "span"], class_=lambda x: x and ("name" in str(x).lower() or "title" in str(x).lower()))
             nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Éxito"
             
@@ -37,40 +36,20 @@ try:
             enlace_raw = link_elem['href']
             enlace = f"https://www.exito.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
-            texto = prod.get_text(separator=" ", strip=True)
-            precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
-            precios_num = []
-            for pr in precios_raw:
-                num = int(re.sub(r'[^\d]', '', pr))
-                if num > 10000:
-                    precios_num.append(num)
-            
-            precios_num = sorted(list(set(precios_num)), reverse=True)
-            if not precios_num:
-                continue
-                
-            precio_alto = precios_num[0]
-            precio_oferta = precios_num[-1] if len(precios_num) >= 2 else precio_alto
-            
             ofertas.append({
                 "Nombre": nombre,
-                "Precio Normal": f"${precio_alto:,.0f}".replace(",", "."),
-                "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
-                "Descuento": "Oferta Prueba",
                 "Enlace Directo": enlace,
-                "Imagen": "https://via.placeholder.com/200?text=Exito",
-                "Almacen": "Éxito",
-                "Categoria": "Tecnología"
+                "Almacen": "Éxito (Prueba)",
+                "Estado": "OK - ScraperAPI Funcionando"
             })
             
-        print(f"GANGAS EXTRAÍDAS CON ÉXITO: {len(ofertas)}")
+        print(f"--> Ofertas procesadas: {len(ofertas)}")
         
-        # Guardar directamente en el JSON que alimenta la aplicación web
         with open("ofertas.json", "w", encoding="utf-8") as f:
             json.dump(ofertas, f, ensure_ascii=False, indent=2)
-        print("¡Archivo ofertas.json actualizado correctamente!")
+        print("--> ¡RESULTADO: ofertas.json generado exitosamente!")
     else:
-        print(f"Error en ScraperAPI: {respuesta.text}")
+        print(f"--> ERROR EN SCRAPERAPI: {respuesta.text}")
 
 except Exception as e:
-    print(f"Error crítico en la prueba: {str(e)}")
+    print(f"--> Error crítico en la prueba: {str(e)}")
