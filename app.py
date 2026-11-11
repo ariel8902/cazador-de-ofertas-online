@@ -16,62 +16,69 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: BARRA FIJA SUPERIOR Y DISEÑO PROFESIONAL ---
+# --- ESTILOS CSS PROFESIONALES Y LIMPIOS ---
 st.markdown("""
     <style>
     /* Fondo general Gris Perla / Marfil Suave */
     .stApp {
         background-color: #F1F5F9;
-        margin-top: 0px;
     }
-    
-    /* Barra Superior Fija y Estática (Navbar de Marca y Logos Oficiales) */
-    .fixed-navbar {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
+
+    /* Banner Principal de Marca con Logos Oficiales Integrados */
+    .main-header-banner {
         background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
+        padding: 25px 30px;
+        border-radius: 14px;
         color: white;
-        padding: 10px 25px;
-        z-index: 99999;
+        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+        margin-bottom: 25px;
+        border-bottom: 4px solid #FF4B4B;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        border-bottom: 3px solid #FF4B4B;
+        flex-wrap: wrap;
+        gap: 20px;
     }
-    .navbar-brand {
-        font-size: 1.4rem;
+    .brand-info h1 {
+        font-size: 2.3rem;
         font-weight: 900;
-        letter-spacing: 0.5px;
+        margin: 0;
         color: #FFFFFF;
+        letter-spacing: 0.5px;
         text-transform: uppercase;
-        display: flex;
-        align-items: center;
-        gap: 8px;
     }
-    .navbar-brand span {
+    .brand-info h1 span {
         color: #FF4B4B;
     }
-    .navbar-logos {
+    .brand-info p {
+        font-size: 0.95rem;
+        color: #94A3B8;
+        margin: 5px 0 0 0;
+    }
+    
+    /* Contenedor de Logos Oficiales */
+    .official-logos-container {
         display: flex;
         align-items: center;
-        gap: 12px;
-        margin-right: 40px;
+        gap: 15px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 10px 18px;
+        border-radius: 10px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
     }
-    .store-logo-img {
-        height: 28px;
+    .logo-item {
         background: white;
-        padding: 3px 8px;
+        padding: 5px 10px;
         border-radius: 6px;
-        object-fit: contain;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         box-shadow: 0 2px 5px rgba(0,0,0,0.2);
     }
-
-    /* Espaciado para compensar la barra fija superior */
-    .main-content-wrapper {
-        margin-top: 60px;
+    .logo-item img {
+        height: 22px;
+        object-fit: contain;
     }
 
     /* Tarjetas de Producto Modernas */
@@ -136,24 +143,22 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA NAVEGADORA FIJA SUPERIOR (ESTÁTICA CON LOGOS OFICIALES) ---
+# --- BANNER SUPERIOR OFICIAL CON TÍTULO Y LOGOS DE LAS TIENDAS ---
 st.markdown("""
-    <div class="fixed-navbar">
-        <div class="navbar-brand">
-            🎯 CAZADOR DE <span>GANGAS</span>
+    <div class="main-header-banner">
+        <div class="brand-info">
+            <h1>🎯 CAZADOR DE <span>GANGAS</span></h1>
+            <p>La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</p>
         </div>
-        <div class="navbar-logos">
-            <span style="font-size: 0.8rem; color: #94A3B8; font-weight: 600;">ALIADOS:</span>
-            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
-            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
-            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
-            <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
+        <div class="official-logos-container">
+            <span style="font-size: 0.75rem; color: #CBD5E1; font-weight: 700; letter-spacing: 0.5px;">ALIADOS:</span>
+            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito"></div>
+            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella"></div>
+            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto"></div>
+            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix"></div>
         </div>
     </div>
 """, unsafe_allow_html=True)
-
-# Contenedor principal con margen superior para no solapar la barra fija
-st.markdown('<div class="main-content-wrapper"></div>', unsafe_allow_html=True)
 
 # Filtrar ofertas por almacén seleccionado
 ofertas_para_mostrar = st.session_state.gangas_guardadas
