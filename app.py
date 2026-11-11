@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: LOGOS MÁS GRANDES Y BANNER AMARILLO LIMPIO (SIN LÍNEAS NEGRAS) ---
+# --- ESTILOS CSS: FRANJA AMARILLA COMPACTA Y DELGADA, LOGOS GRANDES ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -64,7 +64,7 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 58px; /* Logotipos más grandes y llamativos */
+        height: 58px; /* Logotipos imponentes y al doble de tamaño */
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -72,32 +72,34 @@ st.markdown("""
         transform: scale(1.08);
     }
 
-    /* Banner Principal de Marca: Amarillo puro brillante estilo Éxito, sin líneas negras */
+    /* Banner Principal Compacto y Delgado (Más arriba, menos invasivo) */
     .main-header-banner {
-        background: #FFD100;
-        padding: 40px 20px;
-        border-radius: 16px;
+        background: #FFD100; /* Amarillo puro brillante estilo Éxito */
+        padding: 12px 20px; /* Reducido drásticamente para hacerlo delgado */
+        border-radius: 12px;
         color: #1E293B;
-        box-shadow: 0 8px 25px rgba(255, 209, 0, 0.25);
-        margin-bottom: 30px;
-        border: none; /* Cero líneas negras alrededor */
+        box-shadow: 0 4px 15px rgba(255, 209, 0, 0.2);
+        margin-bottom: 20px;
+        margin-top: -10px;
+        border: none;
         text-align: center;
     }
     .brand-title {
-        font-size: 3rem;
+        font-size: 1.8rem; /* Tamaño optimizado y compacto */
         font-weight: 900;
         margin: 0;
         color: #0F172A;
-        letter-spacing: 1.5px;
+        letter-spacing: 1px;
         text-transform: uppercase;
+        display: inline-block;
     }
     .brand-title span {
         color: #DC2626;
     }
     .brand-subtitle {
-        font-size: 1.1rem;
+        font-size: 0.85rem;
         color: #1E293B;
-        margin: 10px 0 0 0;
+        margin: 2px 0 0 0;
         font-weight: 700;
     }
 
@@ -173,7 +175,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR DE MARCA (AMARILLO PURO SIN LÍNEAS NEGRAS) ---
+# --- BANNER SUPERIOR COMPACTO Y DELGADO ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
