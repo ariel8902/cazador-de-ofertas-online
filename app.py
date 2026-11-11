@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS LIMPIOS ---
+# --- ESTILOS CSS: LOGOS AL DOBLE DE TAMAÑO Y AMARILLO PURO ÉXITO ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -49,7 +49,7 @@ st.markdown("""
     /* Contenedor fijo, estático y perfectamente centrado en la franja blanca */
     .top-fixed-logos-bar {
         position: fixed;
-        top: 6px;
+        top: 2px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 999999;
@@ -64,24 +64,24 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 26px;
+        height: 48px; /* Logotipos al doble de tamaño */
         object-fit: contain;
         transition: transform 0.2s ease;
     }
     .store-logo-img:hover {
-        transform: scale(1.1);
+        transform: scale(1.08);
     }
 
-    /* Banner Principal de Marca con Tonos Amarillos Elegantes */
+    /* Banner Principal de Marca con Amarillo Puro Estilo Éxito */
     .main-header-banner {
-        background: linear-gradient(135deg, #FEF08A 0%, #FACC15 100%);
+        background: #FFD100; /* Amarillo puro brillante estilo Éxito */
         padding: 35px 20px;
         border-radius: 16px;
         color: #1E293B;
-        box-shadow: 0 10px 25px rgba(250, 204, 21, 0.25);
+        box-shadow: 0 10px 25px rgba(255, 209, 0, 0.3);
         margin-bottom: 30px;
         border-top: 5px solid #1E293B;
-        border-bottom: 5px solid #DC2626;
+        border-bottom: 5px solid #0F172A;
         text-align: center;
     }
     .brand-title {
@@ -97,9 +97,9 @@ st.markdown("""
     }
     .brand-subtitle {
         font-size: 1.05rem;
-        color: #334155;
+        color: #1E293B;
         margin: 8px 0 0 0;
-        font-weight: 600;
+        font-weight: 700;
     }
 
     /* Tarjetas de Producto Modernas */
@@ -164,7 +164,7 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON LOS LOGOS LOCALES EN BASE64 ---
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS DOBLE DE GRANDES ---
 st.markdown(f"""
     <div class="top-fixed-logos-bar">
         <img class="store-logo-img" src="data:image/png;base64,{img_exito}" alt="Éxito">
@@ -174,7 +174,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR DE MARCA (AMARILLO ELEGANTE) ---
+# --- BANNER SUPERIOR DE MARCA (AMARILLO PURO ÉXITO) ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
