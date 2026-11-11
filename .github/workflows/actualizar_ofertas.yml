@@ -1,92 +1,55 @@
-name: Actualizador Nocturno de Gangas
+import json
+import re
+import requests
+from bs4 import BeautifulSoup
 
-on:
-  schedule:
-    - cron: '0 5 * * *'  # Se ejecuta automáticamente todos los días
-  workflow_dispatch:      # Permite ejecutarlo manualmente desde GitHub
+API_KEY = "392e8624ae3a6701c44394bc61223b66"
+URL_PRUEBA = "https://www.exito.com/tecnologia"
 
-permissions:
-  contents: write
+print("--- [PRUEBA RÁPIDA] Probando ScraperAPI en Éxito Tecnología ---")
 
-jobs:
-  actualizar:
-    runs-on: ubuntu-latest
+endpoint = "http://api.scraperapi.com"
+payload = {
+    'api_key': API_KEY,
+    'url': URL_PRUEBA,
+    'render': 'true',
+    'country_code': 'co'
+}
 
-    steps:
-    - name: Clonar Repositorio
-      uses: actions/checkout@v3
+try:
+    respuesta = requests.get(endpoint, params=payload, timeout=90)
+    print(f"--> Código HTTP devuelto por ScraperAPI: {respuesta.status_code}")
+    
+    if respuesta.status_code == 200:
+        soup = BeautifulSoup(respuesta.text, "html.parser")
+        tarjetas = soup.find_all("article") or soup.find_all("div", class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower()))
+        print(f"--> Tarjetas de producto encontradas: {len(tarjetas)}")
+        
+        ofertas = []
+        for prod in tarjetas[:5]:
+            nombre_elem = prod.find(["h3", "h2", "span"], class_=lambda x: x and ("name" in str(x).lower() or "title" in str(x).lower()))
+            nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Éxito"
+            
+            link_elem = prod.find("a", href=True)
+            if not link_elem:
+                continue
+            enlace_raw = link_elem['href']
+            enlace = f"https://www.exito.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
-    - name: Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+            ofertas.append({
+                "Nombre": nombre,
+                "Enlace Directo": enlace,
+                "Almacen": "Éxito (Prueba)",
+                "Estado": "OK - ScraperAPI Funcionando"
+            })
+            
+        print(f"--> Ofertas procesadas: {len(ofertas)}")
+        
+        with open("ofertas.json", "w", encoding="utf-8") as f:
+            json.dump(ofertas, f, ensure_ascii=False, indent=2)
+        print("--> ¡RESULTADO: ofertas.json generado exitosamente!")
+    else:
+        print(f"--> ERROR EN SCRAPERAPI: {respuesta.text}")
 
-    - name: Instalar Dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
-
-    - name: Ejecutar Extractor Nocturno Multitienda
-      env:
-        SCRAPER_API_KEY: ${{ secrets.SCRAPER_API_KEY }}
-      run: |
-        python -c "
-        import json, time, sys, os
-        sys.path.append('extractores')
-
-        from exito import extraer_exito
-        from alkosto import extraer_alkosto
-        from ktronix import extraer_ktronix
-        from falabella import extraer_falabella
-
-        todas_ofertas = []
-
-        # 1. Éxito
-        try:
-            print('--- Iniciando Éxito ---')
-            of_exito = extraer_exito()
-            print(f'Éxito aportó: {len(of_exito)} ofertas')
-            todas_ofertas.extend(of_exito)
-        except Exception as e:
-            print('Error crítico en Éxito:', e)
-
-        # 2. Alkosto
-        try:
-            print('--- Iniciando Alkosto ---')
-            of_alkosto = extraer_alkosto()
-            print(f'Alkosto aportó: {len(of_alkosto)} ofertas')
-            todas_ofertas.extend(of_alkosto)
-        except Exception as e:
-            print('Error crítico en Alkosto:', e)
-
-        # 3. Ktronix
-        try:
-            print('--- Iniciando Ktronix ---')
-            of_ktronix = extraer_ktronix()
-            print(f'Ktronix aportó: {len(of_ktronix)} ofertas')
-            todas_ofertas.extend(of_ktronix)
-        except Exception as e:
-            print('Error crítico en Ktronix:', e)
-
-        # 4. Falabella
-        try:
-            print('--- Iniciando Falabella ---')
-            of_falabella = extraer_falabella()
-            print(f'Falabella aportó: {len(of_falabella)} ofertas')
-            todas_ofertas.extend(of_falabella)
-        except Exception as e:
-            print('Error crítico en Falabella:', e)
-
-        print(f'TOTAL GENERAL GUARDADO: {len(todas_ofertas)} ofertas')
-
-        with open('ofertas.json', 'w', encoding='utf-8') as f:
-            json.dump(todas_ofertas, f, ensure_ascii=False, indent=2)
-        "
-
-    - name: Guardar Cambios en GitHub
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add ofertas.json
-        git commit -m "🤖 Actualización automática de gangas multitienda" || exit 0
-        git push
+except Exception as e:
+    print(f"--> Error crítico en la prueba: {str(e)}")
