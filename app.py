@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: LOGOS OFICIALES GRANDES Y CENTRADOS EN LA FRANJA SUPERIOR ---
+# --- ESTILOS CSS: LOGOS OFICIALES FIJOS, CENTRADOS Y LIMPIOS EN LA FRANJA SUPERIOR ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -25,14 +25,14 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Estilizar la barra superior nativa de Streamlit */
+    /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
     }
 
-    /* Contenedor fijo y perfectamente centrado para los logotipos en la franja blanca */
+    /* Contenedor fijo, estático y perfectamente centrado para los logotipos oficiales */
     .top-fixed-logos-bar {
         position: fixed;
         top: 6px;
@@ -41,15 +41,15 @@ st.markdown("""
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 25px;
+        gap: 30px;
         pointer-events: auto;
         background: #FFFFFF;
-        padding: 4px 20px;
-        border-radius: 8px;
+        padding: 4px 15px;
+        border-radius: 6px;
     }
     
     .store-logo-img {
-        height: 32px;
+        height: 28px;
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -119,13 +119,13 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA DE LOGOS OFICIALES (GRANDES, SIN TEXTO Y FIJOS AL CENTRO SUPERIOR) ---
+# --- BARRA DE LOGOS OFICIALES (GRANDES, SIN TEXTO, FIJOS Y CENTRADOS ARRIBA) ---
 st.markdown("""
     <div class="top-fixed-logos-bar">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
-        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" title="Éxito">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" title="Falabella">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" title="Alkosto">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" title="Ktronix">
     </div>
 """, unsafe_allow_html=True)
 
