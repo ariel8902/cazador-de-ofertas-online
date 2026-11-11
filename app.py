@@ -16,7 +16,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS: BARRA FIJA SUPERIOR ESTÁTICA EN LA FRANJA BLANCA ---
+# --- ESTILOS CSS: LOGOS OFICIALES PUROS, GRANDES Y FIJOS EN LA FRANJA SUPERIOR ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -25,44 +25,37 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Estilizar la barra superior nativa de Streamlit para que sea fija y limpia */
+    /* Estilizar la barra superior nativa de Streamlit */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
     }
 
-    /* Contenedor fijo, estático y perfectamente centrado en la franja superior */
+    /* Contenedor fijo y estático en la franja blanca superior */
     .top-fixed-logos-bar {
         position: fixed;
-        top: 8px;
+        top: 6px;
         left: 50%;
         transform: translateX(-50%);
         z-index: 999999;
         display: flex;
         align-items: center;
-        gap: 20px;
+        gap: 35px;
         pointer-events: auto;
         background: #FFFFFF;
         padding: 2px 15px;
         border-radius: 6px;
     }
     
-    .store-badge-pill {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        padding: 4px 12px;
-        border-radius: 20px;
-        font-weight: 800;
-        font-size: 0.8rem;
-        letter-spacing: 0.5px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    .store-logo-img {
+        height: 26px;
+        object-fit: contain;
+        transition: transform 0.2s ease;
     }
-    .badge-exito { background-color: #FACC15; color: #713F12; }
-    .badge-falabella { background-color: #84CC16; color: #1A2E05; }
-    .badge-alkosto { background-color: #0EA5E9; color: #0C4A6E; }
-    .badge-ktronix { background-color: #EF4444; color: #450A0A; }
+    .store-logo-img:hover {
+        transform: scale(1.08);
+    }
 
     /* Tarjetas de Producto Modernas */
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
@@ -126,13 +119,13 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BARRA SUPERIOR FIJA CON IDENTIDAD VISUAL DE LAS TIENDAS ---
+# --- BARRA SUPERIOR FIJA CON LOS LOGOS OFICIALES PUROS ---
 st.markdown("""
     <div class="top-fixed-logos-bar">
-        <div class="store-badge-pill badge-exito">🟡 ÉXITO</div>
-        <div class="store-badge-pill badge-falabella">🟢 FALABELLA</div>
-        <div class="store-badge-pill badge-alkosto">🔵 ALKOSTO</div>
-        <div class="store-badge-pill badge-ktronix">🔴 KTRONIX</div>
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto">
+        <img class="store-logo-img" src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix">
     </div>
 """, unsafe_allow_html=True)
 
