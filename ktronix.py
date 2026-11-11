@@ -7,14 +7,15 @@ API_KEY = "392e8624ae3a6701c44394bc61223b66"
 
 def extraer_ktronix():
     print("--- [KTRONIX] Rastreando Ofertas (Filtro >= 50%) ---")
-    categorias = [
-        ("https://www.ktronix.com/tecnologia/c/BI_100", "Tecnología"),
-        ("https://www.ktronix.com/electrodomesticos/c/BI_101", "Electrodomésticos")
+    urls = [
+        "https://www.ktronix.com/ofertas",
+        "https://www.ktronix.com/tecnologia/c/BI_100",
+        "https://www.ktronix.com/electrodomesticos/c/BI_101"
     ]
     
     ofertas = []
     
-    for url, cat in categorias:
+    for url in urls:
         payload = {
             'api_key': API_KEY,
             'url': url,
@@ -25,11 +26,13 @@ def extraer_ktronix():
             res = requests.get("http://api.scraperapi.com", params=payload, timeout=90)
             if res.status_code == 200:
                 soup = BeautifulSoup(res.text, "html.parser")
-                tarjetas = soup.find_all("li", class_=lambda x: x and "product" in str(x).lower()) or soup.find_all("div", class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower()))
+                tarjetas = soup.find_all(["li", "div"], class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower()))
                 
-                for prod in tarjetas[:20]:
-                    nombre_elem = prod.find(["h3", "h2", "a", "span"], class_=lambda x: x and ("name" in str(x).lower() or "title" in str(x).lower()))
-                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else "Producto Ktronix"
+                for prod in tarjetas:
+                    nombre_elem = prod.find(["h2", "h3", "h4", "a"], class_=lambda x: x and ("name" in str(x).lower() or "title" in str(x).lower()))
+                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else ""
+                    if not nombre or len(nombre) < 4:
+                        continue
                     
                     link_elem = prod.find("a", href=True)
                     if not link_elem:
@@ -37,6 +40,15 @@ def extraer_ktronix():
                     enlace_raw = link_elem['href']
                     enlace = f"https://www.ktronix.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
+                    # Captura de Imagen Real
+                    img_elem = prod.find("img")
+                    imagen = "https://via.placeholder.com/200?text=Ktronix"
+                    if img_elem:
+                        imagen = img_elem.get("data-src") or img_elem.get("src") or img_elem.get("srcset") or imagen
+                        if isinstance(imagen, str) and imagen.startswith("//"):
+                            imagen = "https:" + imagen
+
+                    # Captura de Precios
                     texto = prod.get_text(separator=" ", strip=True)
                     precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
                     precios_num = []
@@ -46,30 +58,29 @@ def extraer_ktronix():
                             precios_num.append(num)
                     
                     precios_num = sorted(list(set(precios_num)), reverse=True)
-                    if not precios_num:
+                    if len(precios_num) < 2:
                         continue
                         
                     precio_alto = precios_num[0]
-                    precio_oferta = precios_num[-1] if len(precios_num) >= 2 else precio_alto
+                    precio_oferta = precios_num[-1]
                     
-                    descuento = 0
-                    if precio_alto > precio_oferta:
-                        descuento = int(((precio_alto - precio_oferta) / precio_alto) * 100)
+                    descuento = int(((precio_alto - precio_oferta) / precio_alto) * 100)
                     
-                    # FILTRO 50%+ DE DESCUENTO
                     if descuento >= 50:
+                        medio_pago = "Tarjeta CrediAlkosto / Oferta Especial" if "tarjeta" in texto.lower() else "Cualquier Medio de Pago"
+                        
                         ofertas.append({
                             "Nombre": nombre,
                             "Precio Normal": f"${precio_alto:,.0f}".replace(",", "."),
                             "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
                             "Descuento": f"-{descuento}%",
+                            "Medio Pago": medio_pago,
                             "Enlace Directo": enlace,
-                            "Imagen": "https://via.placeholder.com/200?text=Ktronix",
-                            "Almacen": "Ktronix",
-                            "Categoria": cat
+                            "Imagen": imagen,
+                            "Almacen": "Ktronix"
                         })
         except Exception as e:
-            print(f"Error en Ktronix ({cat}): {e}")
+            print(f"Error en Ktronix: {e}")
             
-    print(f"Ktronix aportó: {len(ofertas)} ofertas de 50%+ de descuento")
+    print(f"Ktronix aportó: {len(ofertas)} ofertas de 50%+")
     return ofertas
