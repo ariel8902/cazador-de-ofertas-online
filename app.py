@@ -16,50 +16,52 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS PROFESIONALES Y LIMPIOS ---
+# --- ESTILOS CSS PROFESIONALES Y ATRACTIVOS ---
 st.markdown("""
     <style>
-    /* Fondo general de la aplicación */
+    /* Fondo general de la aplicación (Marfil suave / Gris perla) */
     .stApp {
-        background-color: #F1F5F9;
+        background-color: #F8FAFC;
     }
 
-    /* Banner Principal de Marca con Logos Oficiales Integrados */
+    /* Banner Principal de Marca con Estética Comercial Moderna */
     .main-header-banner {
-        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-        padding: 30px 20px;
-        border-radius: 14px;
+        background: linear-gradient(135deg, #1E293B 0%, #0F172A 100%);
+        padding: 35px 25px;
+        border-radius: 16px;
         color: white;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
+        box-shadow: 0 10px 25px rgba(15, 23, 42, 0.25);
         margin-bottom: 30px;
-        border-bottom: 4px solid #FF4B4B;
+        border-top: 5px solid #FACC15; /* Toque Amarillo Éxito */
+        border-bottom: 5px solid #FF4B4B;
         text-align: center;
     }
     .brand-title {
-        font-size: 2.8rem;
+        font-size: 3rem;
         font-weight: 900;
         margin: 0;
         color: #FFFFFF;
-        letter-spacing: 1px;
+        letter-spacing: 1.5px;
         text-transform: uppercase;
     }
     .brand-title span {
         color: #FF4B4B;
     }
     .brand-subtitle {
-        font-size: 1.05rem;
+        font-size: 1.1rem;
         color: #94A3B8;
-        margin: 8px 0 20px 0;
+        margin: 10px 0 25px 0;
+        font-weight: 400;
     }
     
-    /* Contenedor de Logos Oficiales Centrales */
+    /* Contenedor Limpio y Profesional para los Logotipos Oficiales */
     .official-logos-container {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        gap: 20px;
-        background: rgba(255, 255, 255, 0.1);
-        padding: 10px 25px;
+        gap: 25px;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 12px 30px;
         border-radius: 12px;
         border: 1px solid rgba(255, 255, 255, 0.15);
     }
@@ -67,12 +69,12 @@ st.markdown("""
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        padding: 6px 16px;
+        padding: 8px 18px;
         border-radius: 20px;
-        font-weight: 800;
+        font-weight: 900;
         font-size: 0.85rem;
         letter-spacing: 0.5px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
     }
     .badge-exito { background-color: #FACC15; color: #713F12; }
     .badge-falabella { background-color: #84CC16; color: #1A2E05; }
@@ -141,17 +143,16 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BANNER SUPERIOR DE MARCA CON LOGOTIPOS OFICIALES VISIBLES Y CENTRADOS ---
+# --- BANNER SUPERIOR DE MARCA CON DISEÑO ATRACTIVO Y LOGOS LIMPIOS ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>GANGAS</span></div>
         <div class="brand-subtitle">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</div>
         <div class="official-logos-container">
-            <span style="font-size: 0.8rem; color: #E2E8F0; font-weight: 700; margin-right: 5px;">ALIADOS OFICIALES:</span>
-            <div class="store-badge-pill badge-exito">🟡 ÉXITO</div>
-            <div class="store-badge-pill badge-falabella">🟢 FALABELLA</div>
-            <div class="store-badge-pill badge-alkosto">🔵 ALKOSTO</div>
-            <div class="store-badge-pill badge-ktronix">🔴 KTRONIX</div>
+            <div class="store-badge-pill badge-exito">ÉXITO</div>
+            <div class="store-badge-pill badge-falabella">FALABELLA</div>
+            <div class="store-badge-pill badge-alkosto">ALKOSTO</div>
+            <div class="store-badge-pill badge-ktronix">KTRONIX</div>
         </div>
     </div>
 """, unsafe_allow_html=True)
@@ -167,7 +168,7 @@ if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
 
 # --- VITRINA DE PRODUCTOS ---
 if ofertas_para_mostrar:
-    st.markdown(f"### 🛒 **Oportunidades Disponibles ({len(ofertas_para_mostrar)} products)**")
+    st.markdown(f"### 🛒 **Oportunidades Disponibles ({len(ofertas_para_mostrar)} productos)**")
     cols = st.columns(3)
     for idx, item in enumerate(ofertas_para_mostrar):
         with cols[idx % 3]:
