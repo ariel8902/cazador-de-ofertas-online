@@ -2,80 +2,70 @@ name: Actualizador Nocturno de Gangas (50%+)
 
 on:
   schedule:
-    - cron: '0 5 * * *'  # Ejecución automática diaria
-  workflow_dispatch:      # Ejecución manual desde GitHub
-
-permissions:
-  contents: write
+    - cron: '0 */6 * * *' # Se ejecuta cada 6 horas automáticamente
+  workflow_dispatch:      # Permite ejecución manual desde GitHub
 
 jobs:
-  actualizar:
+  actualizar-gangas:
     runs-on: ubuntu-latest
-
+    
     steps:
-    - name: Clonar Repositorio
-      uses: actions/checkout@v3
+      - name: Clonar Repositorio
+        uses: actions/checkout@v3
 
-    - name: Configurar Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Configurar Entorno Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Instalar Dependencias
-      run: |
-        python -m pip install --upgrade pip
-        pip install requests beautifulsoup4
+      - name: Instalar Dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4 pandas lxml
 
-    - name: Ejecutar Extractor Multitienda (Filtro 50%+)
-      run: |
-        python -c "
-        import json, sys
+      - name: Ejecutar Extractor Multitienda (Filtro 50%+)
+        env:
+          SCRAPERAPI_KEY: "392e8624ae3a6701c44394bc61223b66"
+        run: |
+          python -c "
+          import json
+          from exito import extraer_exito
+          from alkosto import extraer_alkosto
+          from ktronix import extraer_ktronix
+          from falabella import extraer_falabella
 
-        from exito import extraer_exito
-        from alkosto import extraer_alkosto
-        from ktronix import extraer_ktronix
-        from falabella import extraer_falabella
+          todas_las_ofertas = []
+          
+          try:
+              todas_las_ofertas.extend(extraer_exito())
+          except Exception as e:
+              print(f'Error Éxito: {e}')
+              
+          try:
+              todas_las_ofertas.extend(extraer_alkosto())
+          except Exception as e:
+              print(f'Error Alkosto: {e}')
+              
+          try:
+              todas_las_ofertas.extend(extraer_ktronix())
+          except Exception as e:
+              print(f'Error Ktronix: {e}')
+              
+          try:
+              todas_las_ofertas.extend(extraer_falabella())
+          except Exception as e:
+              print(f'Error Falabella: {e}')
 
-        todas_ofertas = []
+          with open('ofertas.json', 'w', encoding='utf-8') as f:
+              json.dump(todas_las_ofertas, f, ensure_ascii=False, indent=2)
+          print(f'Total de ofertas guardadas con 50%+ de descuento: {len(todas_las_ofertas)}')
+          "
 
-        # 1. Éxito
-        try:
-            of_exito = extraer_exito()
-            todas_ofertas.extend(of_exito)
-        except Exception as e:
-            print('Error en Éxito:', e)
-
-        # 2. Alkosto
-        try:
-            of_alkosto = extraer_alkosto()
-            todas_ofertas.extend(of_alkosto)
-        except Exception as e:
-            print('Error en Alkosto:', e)
-
-        # 3. Ktronix
-        try:
-            of_ktronix = extraer_ktronix()
-            todas_ofertas.extend(of_ktronix)
-        except Exception as e:
-            print('Error en Ktronix:', e)
-
-        # 4. Falabella
-        try:
-            of_falabella = extraer_falabella()
-            todas_ofertas.extend(of_falabella)
-        except Exception as e:
-            print('Error en Falabella:', e)
-
-        print(f'=== TOTAL GENERAL GUARDADO: {len(todas_ofertas)} OFERTAS (>=50%) ===')
-
-        with open('ofertas.json', 'w', encoding='utf-8') as f:
-            json.dump(todas_ofertas, f, ensure_ascii=False, indent=2)
-        "
-
-    - name: Guardar Cambios en GitHub
-      run: |
-        git config --global user.name 'github-actions[bot]'
-        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-        git add ofertas.json
-        git commit -m "🤖 Actualización automática de gangas (>=50%)" || exit 0
-        git push
+      - name: Guardar Cambios en GitHub
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git pull origin main --rebase
+          git add ofertas.json
+          git commit -m "🤖 Actualización automática de gangas (>=50%)" || exit 0
+          git push origin main
