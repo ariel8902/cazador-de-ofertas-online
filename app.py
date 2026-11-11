@@ -16,68 +16,47 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- ESTILOS CSS PROFESIONALES Y LIMPIOS ---
+# --- ESTILOS CSS: BARRA FIJA SUPERIOR EN LA FRANJA BLANCA ---
 st.markdown("""
     <style>
-    /* Fondo general Gris Perla / Marfil Suave */
+    /* Fondo general de la aplicación */
     .stApp {
         background-color: #F1F5F9;
+        margin-top: 20px;
     }
 
-    /* Banner Principal de Marca con Logos Oficiales Integrados */
-    .main-header-banner {
-        background: linear-gradient(135deg, #0F172A 0%, #1E3A8A 100%);
-        padding: 25px 30px;
-        border-radius: 14px;
-        color: white;
-        box-shadow: 0 6px 20px rgba(15, 23, 42, 0.2);
-        margin-bottom: 25px;
-        border-bottom: 4px solid #FF4B4B;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 20px;
+    /* Inyección de Barra Fija Estática en la Franja Superior de Streamlit */
+    header[data-testid="stHeader"] {
+        background-color: #FFFFFF !important;
+        border-bottom: 1px solid #E2E8F0 !important;
+        visibility: visible !important;
     }
-    .brand-info h1 {
-        font-size: 2.3rem;
-        font-weight: 900;
-        margin: 0;
-        color: #FFFFFF;
-        letter-spacing: 0.5px;
-        text-transform: uppercase;
-    }
-    .brand-info h1 span {
-        color: #FF4B4B;
-    }
-    .brand-info p {
-        font-size: 0.95rem;
-        color: #94A3B8;
-        margin: 5px 0 0 0;
-    }
-    
-    /* Contenedor de Logos Oficiales */
-    .official-logos-container {
+
+    /* Contenedor flotante para los logos oficiales en la franja superior */
+    .top-fixed-logos-bar {
+        position: fixed;
+        top: 8px;
+        left: 70px;
+        z-index: 999999;
         display: flex;
         align-items: center;
         gap: 15px;
-        background: rgba(255, 255, 255, 0.08);
-        padding: 10px 18px;
-        border-radius: 10px;
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        pointer-events: auto;
     }
-    .logo-item {
-        background: white;
-        padding: 5px 10px;
+    
+    .store-logo-box {
+        background: #FFFFFF;
+        border: 1px solid #CBD5E1;
+        padding: 3px 10px;
         border-radius: 6px;
-        height: 32px;
+        height: 28px;
         display: flex;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 1px 3px rgba(0,0,0,0.05);
     }
-    .logo-item img {
-        height: 22px;
+    .store-logo-box img {
+        height: 18px;
         object-fit: contain;
     }
 
@@ -143,20 +122,22 @@ with st.sidebar:
                     st.success(f"¡{len(res)} ofertas actualizadas!")
                     st.rerun()
 
-# --- BANNER SUPERIOR OFICIAL CON TÍTULO Y LOGOS DE LAS TIENDAS ---
+# --- BARRA DE LOGOS OFICIALES FIJA EN LA FRANJA SUPERIOR ---
 st.markdown("""
-    <div class="main-header-banner">
-        <div class="brand-info">
-            <h1>🎯 CAZADOR DE <span>GANGAS</span></h1>
-            <p>La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</p>
-        </div>
-        <div class="official-logos-container">
-            <span style="font-size: 0.75rem; color: #CBD5E1; font-weight: 700; letter-spacing: 0.5px;">ALIADOS:</span>
-            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito"></div>
-            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella"></div>
-            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto"></div>
-            <div class="logo-item"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix"></div>
-        </div>
+    <div class="top-fixed-logos-bar">
+        <span style="font-size: 0.75rem; font-weight: 800; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px;">Aliados:</span>
+        <div class="store-logo-box" title="Éxito"><img src="https://upload.wikimedia.org/wikipedia/commons/4/42/Almacenes_%C3%89xito_logo.svg" alt="Éxito"></div>
+        <div class="store-logo-box" title="Falabella"><img src="https://upload.wikimedia.org/wikipedia/commons/3/36/Falabella_logo_%282018%29.svg" alt="Falabella"></div>
+        <div class="store-logo-box" title="Alkosto"><img src="https://upload.wikimedia.org/wikipedia/commons/a/a4/Alkosto_logo.svg" alt="Alkosto"></div>
+        <div class="store-logo-box" title="Ktronix"><img src="https://upload.wikimedia.org/wikipedia/commons/b/b3/Ktronix_logo.svg" alt="Ktronix"></div>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- TÍTULO PRINCIPAL DE LA MARCA ---
+st.markdown("""
+    <div style="margin-top: 10px; margin-bottom: 25px; text-align: center;">
+        <h1 style="font-size: 2.2rem; font-weight: 900; color: #0F172A; text-transform: uppercase; margin: 0;">🎯 CAZADOR DE <span style="color: #FF4B4B;">GANGAS</span></h1>
+        <p style="color: #64748B; font-size: 0.95rem; margin-top: 5px;">La vitrina inteligente con las ofertas más implacables de Colombia (Descuentos reales ≥ 50%)</p>
     </div>
 """, unsafe_allow_html=True)
 
