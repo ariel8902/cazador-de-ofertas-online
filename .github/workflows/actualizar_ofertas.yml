@@ -1,71 +1,66 @@
-name: Actualizador Nocturno de Gangas (50%+)
+name: Actualizar Ofertas Automáticamente
 
 on:
   schedule:
-    - cron: '0 */6 * * *' # Se ejecuta cada 6 horas automáticamente
-  workflow_dispatch:      # Permite ejecución manual desde GitHub
+    # Se ejecuta cada 6 horas automáticamente
+    - cron: '0 */6 * * *'
+  # Permite ejecutarlo manualmente desde la pestaña "Acciones"
+  workflow_dispatch:
+
+permissions:
+  contents: write
 
 jobs:
-  actualizar-gangas:
+  actualizar:
     runs-on: ubuntu-latest
-    
-    steps:
-      - name: Clonar Repositorio
-        uses: actions/checkout@v3
 
-      - name: Configurar Entorno Python
-        uses: actions/setup-python@v4
+    steps:
+      - name: Descargar código del repositorio
+        uses: actions/checkout@v4
+        with:
+          ref: principal
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.10'
 
-      - name: Instalar Dependencias
+      - name: Instalar dependencias y Playwright
         run: |
           python -m pip install --upgrade pip
-          pip install requests beautifulsoup4 pandas lxml
+          pip install -r requirements.txt
+          playwright install chromium
+          playwright install-deps chromium
 
-      - name: Ejecutar Extractor Multitienda (Filtro 50%+)
-        env:
-          SCRAPERAPI_KEY: "392e8624ae3a6701c44394bc61223b66"
+      - name: Ejecutar Scrapers de Tiendas
         run: |
           python -c "
           import json
           from exito import extraer_exito
+          from falabella import extraer_falabella
           from alkosto import extraer_alkosto
           from ktronix import extraer_ktronix
-          from falabella import extraer_falabella
 
-          todas_las_ofertas = []
-          
-          try:
-              todas_las_ofertas.extend(extraer_exito())
-          except Exception as e:
-              print(f'Error Éxito: {e}')
-              
-          try:
-              todas_las_ofertas.extend(extraer_alkosto())
-          except Exception as e:
-              print(f'Error Alkosto: {e}')
-              
-          try:
-              todas_las_ofertas.extend(extraer_ktronix())
-          except Exception as e:
-              print(f'Error Ktronix: {e}')
-              
-          try:
-              todas_las_ofertas.extend(extraer_falabella())
-          except Exception as e:
-              print(f'Error Falabella: {e}')
+          ofertas = []
+          for fn in [extraer_exito, extraer_falabella, extraer_alkosto, extraer_ktronix]:
+              try:
+                  res = fn()
+                  if res:
+                      ofertas.extend(res)
+              except Exception as e:
+                  print(f'Error en {fn.__name__}: {e}')
 
-          with open('ofertas.json', 'w', encoding='utf-8') as f:
-              json.dump(todas_las_ofertas, f, ensure_ascii=False, indent=2)
-          print(f'Total de ofertas guardadas con 50%+ de descuento: {len(todas_las_ofertas)}')
+          if ofertas:
+              with open('ofertas.json', 'w', encoding='utf-8') as f:
+                  json.dump(ofertas, f, ensure_ascii=False, indent=2)
+              print(f'Total ofertas guardadas: {len(ofertas)}')
+          else:
+              print('No se extrajeron ofertas nuevas en esta corrida.')
           "
 
       - name: Guardar Cambios en GitHub
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git pull origin main --rebase
           git add ofertas.json
-          git commit -m "🤖 Actualización automática de gangas (>=50%)" || exit 0
-          git push origin main
+          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Actualización automática de ofertas" && git pull --rebase origin principal && git push)
