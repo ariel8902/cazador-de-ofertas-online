@@ -9,7 +9,7 @@ from alkosto import extraer_alkosto
 from ktronix import extraer_ktronix
 from falabella import extraer_falabella
 
-# Configuración de página con la nueva marca comercial
+# Configuración de página con la marca comercial definitiva
 st.set_page_config(
     page_title="Cazador de Ofertas Online | Vitrina Oficial",
     page_icon="🎯",
@@ -30,7 +30,7 @@ img_falabella = obtener_base64_imagen("falabella.png")
 img_alkosto = obtener_base64_imagen("alkosto.png")
 img_ktronix = obtener_base64_imagen("ktronix.png")
 
-# --- ESTILOS CSS: LOGOS GRANDES Y BANNER COMPACTO CON NUEVO TÍTULO ---
+# --- ESTILOS CSS: LOGOS GRANDES FIJOS Y BANNER AMARILLO COMPACTO ---
 st.markdown("""
     <style>
     /* Fondo general de la aplicación */
@@ -39,7 +39,7 @@ st.markdown("""
         margin-top: 15px;
     }
 
-    /* Estilizar la barra superior nativa para que sea fija y limpia */
+    /* Barra superior nativa limpia y fija */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
@@ -64,7 +64,7 @@ st.markdown("""
     }
     
     .store-logo-img {
-        height: 58px; /* Logotipos grandes */
+        height: 58px;
         object-fit: contain;
         transition: transform 0.2s ease;
     }
@@ -74,7 +74,7 @@ st.markdown("""
 
     /* Banner Principal Compacto */
     .main-header-banner {
-        background: #FFD100; /* Amarillo puro brillante estilo Éxito */
+        background: #FFD100;
         padding: 12px 20px;
         border-radius: 12px;
         color: #1E293B;
@@ -125,22 +125,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados
+# Inicializar métricas de sesión
 if 'vistas' not in st.session_state:
     st.session_state.vistas = 150
 if 'clics' not in st.session_state:
     st.session_state.clics = 38
 
-# Cargar ofertas guardadas
-if 'gangas_guardadas' not in st.session_state or len(st.session_state.gangas_guardadas) == 0:
-    if os.path.exists("ofertas.json"):
-        try:
-            with open("ofertas.json", "r", encoding="utf-8") as f:
-                datos = json.load(f)
-                if isinstance(datos, list):
-                    st.session_state.gangas_guardadas = datos
-        except Exception:
-            st.session_state.gangas_guardadas = []
+# Cargar SIEMPRE las ofertas más recientes directamente desde ofertas.json
+ofertas_actuales = []
+if os.path.exists("ofertas.json"):
+    try:
+        with open("ofertas.json", "r", encoding="utf-8") as f:
+            datos = json.load(f)
+            if isinstance(datos, list):
+                ofertas_actuales = datos
+    except Exception:
+        ofertas_actuales = []
+
+st.session_state.gangas_guardadas = ofertas_actuales
 
 # --- PANEL DE ADMINISTRACIÓN OCULTO EN LA BARRA LATERAL ---
 with st.sidebar:
@@ -175,7 +177,7 @@ st.markdown(f"""
     </div>
 """, unsafe_allow_html=True)
 
-# --- BANNER SUPERIOR CON LA NUEVA MARCA MARCADA ---
+# --- BANNER SUPERIOR CON LA NUEVA MARCA ---
 st.markdown("""
     <div class="main-header-banner">
         <div class="brand-title">🎯 CAZADOR DE <span>OFERTAS ONLINE</span></div>
