@@ -1,46 +1,47 @@
-import json
 import re
 import requests
 from bs4 import BeautifulSoup
-
-API_KEY = "392e8624ae3a6701c44394bc61223b66"
+from config import SCRAPER_API_KEY, SCRAPER_API_URL, MIN_DESCUENTO, MAX_DESCUENTO
 
 def extraer_ktronix():
-    print("--- [KTRONIX] Rastreando Ofertas Reales (>= 50%) ---")
+    print(f"--- [KTRONIX] Rastreando Ofertas Reales (>= {MIN_DESCUENTO}%) ---")
     urls = [
-        "https://www.ktronix.com/ofertas",
-        "https://www.ktronix.com/tecnologia/c/BI_100",
-        "https://www.ktronix.com/computadores-tablet/c/BI_102"
+        "https://www.ktronix.com/celulares/c/BI_FE_101",
+        "https://www.ktronix.com/computadores-tablet/c/BI_102",
+        "https://www.ktronix.com/televisores-audio-video/c/BI_FE_103",
+        "https://www.ktronix.com/electrodomesticos/c/BI_FE_105",
+        "https://www.ktronix.com/accesorios-electronica/c/BI_FE_106"
     ]
-    
+
     ofertas = []
-    
+    enlaces_vistos = set()
+
     for url in urls:
         payload = {
-            'api_key': API_KEY,
+            'api_key': SCRAPER_API_KEY,
             'url': url,
             'render': 'true',
             'country_code': 'co'
         }
         try:
-            res = requests.get("http://api.scraperapi.com", params=payload, timeout=90)
+            res = requests.get(SCRAPER_API_URL, params=payload, timeout=90)
             if res.status_code == 200:
                 soup = BeautifulSoup(res.text, "html.parser")
-                tarjetas = soup.find_all(["li", "div", "article"], class_=lambda x: x and ("product" in str(x).lower() or "item" in str(x).lower() or "card" in str(x).lower()))
-                
+                tarjetas = soup.select("li.product__item, div.product__item, li[class*='product']")
+
                 for prod in tarjetas:
-                    link_elem = prod.find("a", href=True)
+                    link_elem = prod.find("a", href=lambda h: h and "/p/" in h)
                     if not link_elem:
                         continue
-                    enlace_raw = link_elem['href']
-                    if "/p/" not in enlace_raw:
-                        continue
-                    
-                    enlace = f"https://www.ktronix.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
 
-                    nombre_elem = prod.find(["h2", "h3", "h4", "a", "span"], class_=lambda x: x and ("name" in str(x).lower() or "title" in str(x).lower()))
-                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else ""
-                    if not nombre or len(nombre) < 5:
+                    enlace_raw = link_elem['href']
+                    enlace = f"https://www.ktronix.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
+                    if enlace in enlaces_vistos:
+                        continue
+
+                    nombre_elem = prod.find(["h2", "h3", "h4"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower()))
+                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else link_elem.get_text(strip=True)
+                    if not nombre or len(nombre) < 6:
                         continue
 
                     img_elem = prod.find("img")
@@ -51,29 +52,30 @@ def extraer_ktronix():
                             imagen = src.split()[0]
                         elif src and str(src).startswith("//"):
                             imagen = "https:" + src.split()[0]
+                        elif src and str(src).startswith("/"):
+                            imagen = "https://www.ktronix.com" + src.split()[0]
 
                     texto = prod.get_text(separator=" ", strip=True)
                     precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
-                    precios_num = []
-                    for pr in precios_raw:
-                        num = int(re.sub(r'[^\d]', '', pr))
-                        if num > 30000:
-                            precios_num.append(num)
-                    
-                    precios_num = sorted(list(set(precios_num)), reverse=True)
+                    precios_num = sorted(list(set([
+                        int(re.sub(r'[^\d]', '', pr)) for pr in precios_raw
+                        if int(re.sub(r'[^\d]', '', pr) or 0) > 30000
+                    ])), reverse=True)
+
                     if len(precios_num) < 2:
                         continue
-                        
+
                     precio_normal = precios_num[0]
                     precio_oferta = precios_num[-1]
                     precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
-                    
+
                     if precio_oferta <= 0 or precio_normal <= precio_oferta:
                         continue
 
                     descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
-                    
-                    if 50 <= descuento <= 80:
+
+                    if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
+                        enlaces_vistos.add(enlace)
                         ofertas.append({
                             "Nombre": nombre,
                             "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
@@ -85,7 +87,7 @@ def extraer_ktronix():
                             "Almacen": "Ktronix"
                         })
         except Exception as e:
-            print(f"Error en Ktronix: {e}")
-            
-    print(f"Ktronix aportó: {len(ofertas)} ofertas reales")
+            print(f"Error en Ktronix ({url}): {e}")
+
+    print(f"Ktronix aportó: {len(ofertas)} ofertas reales de 50%+")
     return ofertas
