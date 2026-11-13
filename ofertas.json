@@ -3,8 +3,8 @@
     "Nombre": "Colchón SPRING Doble (140 x 190 cm) EQUILIBRIUM PRO Resortado Semifirme 2 Almoh Silic + Protector",
     "Precio Normal": "$3.999.990",
     "Precio Tarjeta": "$1.199.990",
-    "Precio Oferta": "$1.079.991",
-    "Descuento": "-73%",
+    "Precio Oferta": "$1.199.990",
+    "Descuento": "-70%",
     "Enlace Directo": "https://www.exito.com/colchon-spring-doble-140-x-190-cm-equilibrium-pro-resortado-semifirme-2-almoh-silic-protector-3225456/p",
     "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/35097490-384-auto/Colchon-SPRING-Doble-140-x-190-cm-EQUILIBRIUM-PRO-Resortado-Semifirme-2-Almoh-Silic-Protector-3751340_a.jpg?v=639244047041170000",
     "Almacen": "Éxito"
@@ -13,8 +13,8 @@
     "Nombre": "Colchón  Doble Zefiro 140X190 Cm SPRING Doble (140 x 190 cm) ZEFIRO Resortado Semifirme",
     "Precio Normal": "$3.359.990",
     "Precio Tarjeta": "$1.149.990",
-    "Precio Oferta": "$1.049.191",
-    "Descuento": "-68%",
+    "Precio Oferta": "$1.149.990",
+    "Descuento": "-65%",
     "Enlace Directo": "https://www.exito.com/colchon-doble-zefiro-140x190-cm-spring-king-200-x-200-cm-zefiro-resortado-semifirme-3225003/p",
     "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/35097042-384-auto/Colchon-Doble-Zefiro-140X190-Cm-SPRING-King-200-x-200-cm-ZEFIRO-Resortado-Semifirme-3749881_a.jpg?v=639244046284830000",
     "Almacen": "Éxito"
@@ -22,8 +22,8 @@
   {
     "Nombre": "Almohada Ortopédica Cojin Cervical Descanso Pack 4 + Regalo",
     "Precio Normal": "$258.900",
-    "Precio Tarjeta": "$96.264",
-    "Precio Oferta": "$96.264",
+    "Precio Tarjeta": "$96.210",
+    "Precio Oferta": "$96.210",
     "Descuento": "-62%",
     "Enlace Directo": "https://www.exito.com/almohada-ortopedica-cojin-cervical-descanso-pack-4-regalo-104686802-mp/p",
     "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/29717506-384-auto/almohada-ortopedica-cojin-cervical-descanso-pack-4-regalo.jpg?v=638910077298330000",
@@ -40,47 +40,104 @@
     "Almacen": "Éxito"
   },
   {
-    "Nombre": "Lenovo",
-    "Precio Normal": "$4.971.780",
-    "Precio Tarjeta": "$1.979.900",
-    "Precio Oferta": "$1.899.900",
-    "Descuento": "-61%",
-    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/150131098/todo-en-uno-lenovo-intel-core-i5-13420h-8gb-ram-512gb-ssd-238-fhd/150131099?sponsoredClickData=%257B%2522isXLP%2522%253Atrue%252C%2522pageType%2522%253A%2522category%2522%252C%2522adType%2522%253A%2522products%2522%252C%2522platform%2522%253A%2522desktop%2522%252C%2522regionCode%2522%253A%2522co%2522%252C%2522context%2522%253A%257B%2522userIdentifier%2522%253A%2522MTc5NDU4MDg0MzIyMQ%253D%253D%2522%252C%2522adIdentifier%2522%253A%2522KWfNIwoQBq9yFnsefTOSBDDmJucMvBIQAaHMWVL7ccSJZjy3stCwnhoQAZhmZJdDeQORUiCZlaLwuCINCgkxNTAxMzEwOTgQATCw22pIAVDC-umqnTRgxqIGchAAAAAAAAAAAAAAAAAAAAAAeAKFAQAAIEE%2522%252C%2522slot%2522%253A1%252C%2522signal%2522%253A%2522Computadora-Todo-en-uno%2522%252C%2522categoryId%2522%253A%2522cat50611%2522%252C%2522providerName%2522%253A%2522topsort%2522%257D%257D",
-    "Imagen": "https://media.falabella.com/FalabellaPEAndCO/NoImage/public",
-    "Almacen": "Falabella",
-    "Categoria": "Electrodomésticos"
+    "Nombre": "Televisor HISENSE 50 pulgadas QLED Fhd Smart TV 50Q4SV",
+    "Precio Normal": "$2.299.900",
+    "Precio Tarjeta": "$1.099.900",
+    "Precio Oferta": "$1.099.900",
+    "Descuento": "-52%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-50-pulgadas-qled-fhd-smart-tv-50q4sv-3242628/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor SAMSUNG 50 pulgadas Mini LED Fhd Smart TV UN50M60HAKXZL",
+    "Precio Normal": "$2.999.900",
+    "Precio Tarjeta": "$1.399.900",
+    "Precio Oferta": "$1.399.900",
+    "Descuento": "-53%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-mini-led-uhd-4k-smart-tv-un50m60hakxzl-3263624/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor TCL 65 pulgadas LED Uhd4K Smart TV 65V6C",
+    "Precio Normal": "$4.799.900",
+    "Precio Tarjeta": "$2.099.900",
+    "Precio Oferta": "$2.099.900",
+    "Descuento": "-56%",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-65-pulgadas-led-uhd-4k-smart-tv-65v6c-3248709/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor HISENSE 58 pulgadas LED Uhd4K Smart TV 58A6NV",
+    "Precio Normal": "$3.599.900",
+    "Precio Tarjeta": "$1.499.900",
+    "Precio Oferta": "$1.499.900",
+    "Descuento": "-58%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-58-pulgadas-led-uhd-4k-smart-tv-58a6nv-3208349/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor HISENSE 65 pulgadas QLED Uhd4K Smart TV 65QD5SV",
+    "Precio Normal": "$4.099.900",
+    "Precio Tarjeta": "$1.999.900",
+    "Precio Oferta": "$1.999.900",
+    "Descuento": "-51%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-65-pulgadas-qled-uhd-4k-smart-tv-65qd5sv-3245570/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor CAIXUN 55 pulgadas QLED Uhd4K Smart TV C55KAUGQ",
+    "Precio Normal": "$3.999.900",
+    "Precio Tarjeta": "$1.349.900",
+    "Precio Oferta": "$1.349.900",
+    "Descuento": "-66%",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-55-pulgadas-qled-uhd-4k-smart-tv-c55kaugq-3255839/p",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36224853-384-auto/Televisor-CAIXUN-55-pulgadas-QLED-Uhd-4K-Smart-TV-C55KAUGQ-3857626_a.jpg?v=639271625705300000",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor HISENSE 43 pulgadas QLED Fhd Smart TV 43Q4SV",
+    "Precio Normal": "$1.899.900",
+    "Precio Tarjeta": "$829.900",
+    "Precio Oferta": "$829.900",
+    "Descuento": "-56%",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-43-pulgadas-qled-fhd-smart-tv-43q4sv-3242627/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor CAIXUN 50 pulgadas QLED Uhd4K Smart TV C50KAUGQ",
+    "Precio Normal": "$3.699.900",
+    "Precio Tarjeta": "$1.199.900",
+    "Precio Oferta": "$1.199.900",
+    "Descuento": "-67%",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-50-pulgadas-qled-uhd-4k-smart-tv-c65vaugq-3253335/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
+  },
+  {
+    "Nombre": "Televisor SAMSUNG 40 pulgadas QLED Fhd Smart TV QN40Q5FAAKXZL",
+    "Precio Normal": "$1.899.900",
+    "Precio Tarjeta": "$949.900",
+    "Precio Oferta": "$949.900",
+    "Descuento": "-50%",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-40-pulgadas-qled-fhd-smart-tv-qn40q5faakxzl-3234007/p",
+    "Imagen": "https://d3ez54m90carx6.cloudfront.net/Flag-3z6l525tmn67nxy9-im8igmox9zb2f.svg",
+    "Almacen": "Éxito"
   },
   {
     "Nombre": "Lenovo",
-    "Precio Normal": "$4.949.900",
-    "Precio Tarjeta": "$2.319.900",
-    "Precio Oferta": "$2.249.900",
-    "Descuento": "-54%",
-    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/151955994/todo-en-uno-lenovo-24arr9-ryzen-5-7535hs-16gb-ram-512gb-ssd-24-fhd/151955995?sponsoredClickData=%257B%2522isXLP%2522%253Atrue%252C%2522pageType%2522%253A%2522category%2522%252C%2522adType%2522%253A%2522products%2522%252C%2522platform%2522%253A%2522desktop%2522%252C%2522regionCode%2522%253A%2522co%2522%252C%2522context%2522%253A%257B%2522userIdentifier%2522%253A%2522MTc5NDU4MDg0MzIyMQ%253D%253D%2522%252C%2522adIdentifier%2522%253A%2522TLdl-AoQBq9yFnsefTOSBDDmJucMvBIQAaHMWVL7ccSJZjy3stCwnhoQAZhmZJdDeQORUiCZlaLwuCINCgkxNTE5NTU5OTQQATCw22pIAVDC-umqnTRgvY8EchAAAAAAAAAAAAAAAAAAAAAAeAKFAQAAIEE%2522%252C%2522slot%2522%253A2%252C%2522signal%2522%253A%2522Computadora-Todo-en-uno%2522%252C%2522categoryId%2522%253A%2522cat50611%2522%252C%2522providerName%2522%253A%2522topsort%2522%257D%257D",
+    "Precio Normal": "$4.685.780",
+    "Precio Tarjeta": "$2.449.900",
+    "Precio Oferta": "$2.329.900",
+    "Descuento": "-50%",
+    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/150251939/portatil-ideapad-slim-3-i5-13420h-24gb-ram-512gb-ssd-15-3-fhd-green-light/150251940?sponsoredClickData=%257B%2522isXLP%2522%253Atrue%252C%2522pageType%2522%253A%2522category%2522%252C%2522adType%2522%253A%2522products%2522%252C%2522platform%2522%253A%2522desktop%2522%252C%2522regionCode%2522%253A%2522co%2522%252C%2522context%2522%253A%257B%2522userIdentifier%2522%253A%2522MTc5NDU5ODU0ODM3Ng%253D%253D%2522%252C%2522adIdentifier%2522%253A%2522CCIimwoQBq92aJuNdVWgBBN_nxW2yRIQAaHMWVL7ccSJZjy3stCwnhoQAZhmZJdDeQORUiCZlaLwuCINCgkxNTAyNTE5MzkQATCw22pIAVCvlKKznTRgsa4jchAAAAAAAAAAAAAAAAAAAAAAeAKFAQAAIEE%2522%252C%2522slot%2522%253A2%252C%2522signal%2522%253A%2522Computadores-Portatiles%2522%252C%2522categoryId%2522%253A%2522cat1361001%2522%252C%2522providerName%2522%253A%2522topsort%2522%257D%257D",
     "Imagen": "https://media.falabella.com/FalabellaPEAndCO/NoImage/public",
     "Almacen": "Falabella",
-    "Categoria": "Electrodomésticos"
-  },
-  {
-    "Nombre": "Lenovo",
-    "Precio Normal": "$4.971.780",
-    "Precio Tarjeta": "$1.979.900",
-    "Precio Oferta": "$1.899.900",
-    "Descuento": "-61%",
-    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/150131098/todo-en-uno-lenovo-intel-core-i5-13420h-8gb-ram-512gb-ssd-238-fhd/150131099",
-    "Imagen": "https://media.falabella.com/FalabellaPEAndCO/NoImage/public",
-    "Almacen": "Falabella",
-    "Categoria": "Electrodomésticos"
-  },
-  {
-    "Nombre": "Lenovo",
-    "Precio Normal": "$5.539.800",
-    "Precio Tarjeta": "$2.479.900",
-    "Precio Oferta": "$2.479.900",
-    "Descuento": "-55%",
-    "Enlace Directo": "https://www.falabella.com.co/falabella-co/product/151329941/todo-en-uno-lenovo-ryzen-7-7730u-ssd-512gb-ram-16gb-led-23-8-led-negro/151329942",
-    "Imagen": "https://media.falabella.com/FalabellaPEAndCO/NoImage/public",
-    "Almacen": "Falabella",
-    "Categoria": "Electrodomésticos"
+    "Categoria": "Tecnología"
   }
 ]
