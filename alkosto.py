@@ -1,15 +1,16 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from config import SCRAPER_API_KEY, SCRAPER_API_URL, MIN_DESCUENTO_TECNOLOGIA
+from config import SCRAPER_API_KEY, SCRAPER_API_URL, MIN_DESCUENTO, MAX_DESCUENTO
 
 def extraer_alkosto():
-    print(f"--- [ALKOSTO] Rastreando Ofertas Reales (>= {MIN_DESCUENTO_TECNOLOGIA}%) ---")
+    print(f"--- [ALKOSTO] Rastreando Ofertas Reales (>= {MIN_DESCUENTO}%) ---")
     urls = [
         "https://www.alkosto.com/celulares/c/BI_FE_101",
         "https://www.alkosto.com/tecnologia/c/BI_FE_104",
         "https://www.alkosto.com/electrodomesticos/c/BI_FE_105",
-        "https://www.alkosto.com/televisores-audio-video/televisores/c/BI_0120_ALK"
+        "https://www.alkosto.com/televisores-audio-video/c/BI_FE_103",
+        "https://www.alkosto.com/hogar/c/BI_FE_107"
     ]
 
     ofertas = []
@@ -58,7 +59,7 @@ def extraer_alkosto():
                     precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
                     precios_num = sorted(list(set([
                         int(re.sub(r'[^\d]', '', pr)) for pr in precios_raw
-                        if int(re.sub(r'[^\d]', '', pr) or 0) > 40000
+                        if int(re.sub(r'[^\d]', '', pr) or 0) > 30000
                     ])), reverse=True)
 
                     if len(precios_num) < 2:
@@ -73,7 +74,7 @@ def extraer_alkosto():
 
                     descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
 
-                    if MIN_DESCUENTO_TECNOLOGIA <= descuento <= 85:
+                    if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
                         enlaces_vistos.add(enlace)
                         ofertas.append({
                             "Nombre": nombre,
@@ -88,5 +89,5 @@ def extraer_alkosto():
         except Exception as e:
             print(f"Error en Alkosto ({url}): {e}")
 
-    print(f"Alkosto aportó: {len(ofertas)} ofertas reales")
+    print(f"Alkosto aportó: {len(ofertas)} ofertas reales de 50%+")
     return ofertas
