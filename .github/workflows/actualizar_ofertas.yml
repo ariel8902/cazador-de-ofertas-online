@@ -2,10 +2,20 @@ name: Actualizar Ofertas Automáticamente
 
 on:
   schedule:
-    # Se ejecuta cada 6 horas automáticamente
     - cron: '0 */6 * * *'
-  # Permite ejecutarlo manualmente desde la pestaña "Acciones"
   workflow_dispatch:
+    inputs:
+      tienda:
+        description: 'Tienda a ejecutar (para pruebas rápidas)'
+        required: true
+        default: 'exito'
+        type: choice
+        options:
+          - exito
+          - falabella
+          - alkosto
+          - ktronix
+          - todas
 
 permissions:
   contents: write
@@ -23,35 +33,56 @@ jobs:
         with:
           python-version: '3.10'
 
-      - name: Instalar dependencias y Playwright
+      - name: Instalar dependencias Python
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          playwright install chromium
-          playwright install-deps chromium
 
       - name: Ejecutar Scrapers de Tiendas
+        env:
+          TIENDA_OBJETIVO: ${{ github.event.inputs.tienda || 'todas' }}
         run: |
           python -c "
-          import json
+          import os, json
           from exito import extraer_exito
           from falabella import extraer_falabella
           from alkosto import extraer_alkosto
           from ktronix import extraer_ktronix
 
-          ofertas = []
-          for fn in [extraer_exito, extraer_falabella, extraer_alkosto, extraer_ktronix]:
+          objetivo = os.getenv('TIENDA_OBJETIVO', 'todas').lower()
+          mapa = {
+              'exito': ('Éxito', extraer_exito),
+              'falabella': ('Falabella', extraer_falabella),
+              'alkosto': ('Alkosto', extraer_alkosto),
+              'ktronix': ('Ktronix', extraer_ktronix),
+          }
+
+          seleccion = list(mapa.values()) if objetivo == 'todas' else [mapa[objetivo]]
+
+          # Si probamos una sola tienda, conservamos las ofertas previas de las demás
+          ofertas_previas = []
+          if objetivo != 'todas' and os.path.exists('ofertas.json'):
+              try:
+                  with open('ofertas.json', 'r', encoding='utf-8') as f:
+                      nombre_actual = mapa[objetivo][0]
+                      ofertas_previas = [o for o in json.load(f) if o.get('Almacen') != nombre_actual]
+              except Exception:
+                  ofertas_previas = []
+
+          nuevas = []
+          for nombre, fn in seleccion:
               try:
                   res = fn()
                   if res:
-                      ofertas.extend(res)
+                      nuevas.extend(res)
               except Exception as e:
                   print(f'Error en {fn.__name__}: {e}')
 
-          if ofertas:
+          total = ofertas_previas + nuevas
+          if total:
               with open('ofertas.json', 'w', encoding='utf-8') as f:
-                  json.dump(ofertas, f, ensure_ascii=False, indent=2)
-              print(f'Total ofertas guardadas: {len(ofertas)}')
+                  json.dump(total, f, ensure_ascii=False, indent=2)
+              print(f'Total ofertas guardadas: {len(total)} (Nuevas de {objetivo}: {len(nuevas)})')
           else:
               print('No se extrajeron ofertas nuevas en esta corrida.')
           "
