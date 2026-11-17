@@ -1,10 +1,16 @@
-import os
 import json
+import subprocess
+import sys
 import urllib.parse
-import requests
+
+# Instalar curl_cffi automáticamente si no está en el entorno de GitHub Actions
+try:
+    from curl_cffi import requests
+except ImportError:
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "curl_cffi"])
+    from curl_cffi import requests
 
 def extraer_exito():
-    api_key = os.getenv("SCRAPERAPI_KEY", "").strip()
     base_url = "https://www.exito.com/api/graphql"
     
     variables = {
@@ -27,31 +33,21 @@ def extraer_exito():
     target_url = f"{base_url}?{query_params}"
 
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
-        "Accept": "application/json",
-        "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc"
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Language": "es-CO,es;q=0.9",
+        "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc",
+        "Origin": "https://www.exito.com"
     }
 
-    print("Iniciando consulta puntual a Éxito GraphQL vía túnel...")
+    print("Iniciando consulta puntual a Éxito GraphQL con huella Chrome (curl_cffi)...")
     ofertas_validas = []
 
     try:
-        if api_key:
-            proxy_params = {
-                "api_key": api_key,
-                "url": target_url,
-                "render": "false",
-                "country_code": "co"
-            }
-            response = requests.get("http://api.scraperapi.com", params=proxy_params, headers=headers, timeout=30)
-        else:
-            print("Aviso: No se detectó SCRAPERAPI_KEY, intentando directo...")
-            response = requests.get(target_url, headers=headers, timeout=20)
-
+        response = requests.get(target_url, headers=headers, impersonate="chrome", timeout=25)
         print(f"Código de estado HTTP: {response.status_code}")
         
         if response.status_code != 200:
-            print("La respuesta no fue 200. Deteniendo ejecución.")
+            print("Akamai bloqueó la IP de Azure incluso con huella Chrome. Necesitaremos túnel proxy.")
             return []
 
         data = response.json()
