@@ -28,8 +28,6 @@ jobs:
           playwright install chromium
 
       - name: Ejecutar Scrapers de Tiendas
-        env:
-          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
         run: |
           python -u -c "
           import json
@@ -46,7 +44,7 @@ jobs:
               except Exception:
                   ofertas_actuales = []
 
-          otras_tiendas = [o for o in ofertas_actuales if o.get('tienda') != 'Éxito']
+          otras_tiendas = [o for o in ofertas_actuales if o.get('Almacen') != 'Éxito']
           nuevas_exito = extraer_exito()
 
           total_ofertas = otras_tiendas + nuevas_exito
