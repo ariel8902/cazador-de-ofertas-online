@@ -11,7 +11,6 @@ def es_producto_valido_comercialmente(nombre, slug, sellers):
     if any(palabra in texto_check for palabra in palabras_prohibidas):
         return False
 
-    # Excluir productos exclusivos de vendedores Marketplace (-mp-) y exigir venta directa de Éxito
     if "-mp-" in slug.lower():
         return False
 
@@ -26,7 +25,6 @@ def extraer_exito():
     ofertas_validas = []
     urls_vistas = set()
 
-    # Categorías de alto valor en Éxito (category-1 / category-2)
     categorias_objetivo = [
         [{"key": "category-1", "value": "tecnologia"}, {"key": "category-2", "value": "celulares"}],
         [{"key": "category-1", "value": "tecnologia"}, {"key": "category-2", "value": "televisores"}],
@@ -54,7 +52,6 @@ def extraer_exito():
             context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = context.new_page()
 
-            # Navegar una sola vez para generar las cookies de sesión válidas ante Akamai
             page.goto("https://www.exito.com/tecnologia?order=discount_desc", wait_until="domcontentloaded", timeout=45000)
             page.wait_for_timeout(6000)
 
@@ -120,7 +117,6 @@ def extraer_exito():
                     if precio_lista <= 0 or precio_oferta <= 0 or precio_oferta >= precio_lista:
                         continue
 
-                    # Evaluar si existe promoción REAL exclusiva con Tarjeta Éxito
                     precio_tarjeta_real = None
                     for seller in sellers:
                         if "exito" not in str(seller.get("sellerName", "")).lower() and str(seller.get("sellerId", "")) != "1":
@@ -134,7 +130,6 @@ def extraer_exito():
                                         if param.get("name") == "PromotionalPriceTableItemsDiscount":
                                             descuento_tabla = float(param.get("value", 0))
                                             precio_calc = precio_lista - descuento_tabla
-                                            # Solo cuenta si es estrictamente menor que el precio general
                                             if 0 < precio_calc < precio_oferta:
                                                 if precio_tarjeta_real is None or precio_calc < precio_tarjeta_real:
                                                     precio_tarjeta_real = precio_calc
@@ -142,7 +137,6 @@ def extraer_exito():
                     mejor_precio = precio_tarjeta_real if precio_tarjeta_real is not None else precio_oferta
                     porcentaje_descuento = round((1 - (mejor_precio / precio_lista)) * 100)
 
-                    # Rango comercial realista (50% a 85%): descarta errores de digitación como 93%
                     if 50 <= porcentaje_descuento <= 85:
                         imagenes = node.get("image", [])
                         imagen_url = imagenes[0].get("url", "https://via.placeholder.com/200") if imagenes else "https://via.placeholder.com/200"
@@ -161,7 +155,6 @@ def extraer_exito():
 
             browser.close()
 
-        # Ordenar de mayor a menor porcentaje de descuento
         ofertas_validas.sort(key=lambda x: int(x["Descuento"].replace("% OFF", "")), reverse=True)
         print(f"Total ofertas comerciales válidas de Éxito (>= 50%): {len(ofertas_validas)}")
         return ofertas_validas
