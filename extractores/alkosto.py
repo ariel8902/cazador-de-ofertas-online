@@ -1,100 +1,146 @@
 import re
-import requests
-from bs4 import BeautifulSoup
-from config import SCRAPER_API_KEY, SCRAPER_API_URL, MIN_DESCUENTO, MAX_DESCUENTO
+import time
+import random
+from playwright.sync_api import sync_playwright
+from config import MIN_DESCUENTO, MAX_DESCUENTO
 
 def extraer_alkosto():
-    print(f"--- [ALKOSTO] Rastreando Ofertas Reales (>= {MIN_DESCUENTO}%) ---")
+    print(f"--- [ALKOSTO] Modo Equilibrado (>= {MIN_DESCUENTO}%) ---")
+
+    # PROMEDIO: 4 categorias buenas, no 2 que es poquito, ni 20 que es mucho
     urls = [
-        "https://www.alkosto.com/celulares/c/BI_FE_101",
-        "https://www.alkosto.com/tecnologia/c/BI_FE_104",
-        "https://www.alkosto.com/electrodomesticos/c/BI_FE_105",
-        "https://www.alkosto.com/televisores-audio-video/c/BI_FE_103",
-        "https://www.alkosto.com/hogar/c/BI_FE_107"
+        "https://www.alkosto.com/search?text=celular",
+        "https://www.alkosto.com/search?text=televisor",
+        "https://www.alkosto.com/search?text=portatil",
+        "https://www.alkosto.com/search?text=nevera",
     ]
 
     ofertas = []
     enlaces_vistos = set()
 
-    for url in urls:
-        payload = {
-            'api_key': SCRAPER_API_KEY,
-            'url': url,
-            'render': 'true',
-            'country_code': 'co'
-        }
-        try:
-            res = requests.get(SCRAPER_API_URL, params=payload, timeout=90)
-            if res.status_code == 200:
-                soup = BeautifulSoup(res.text, "html.parser")
-                tarjetas = soup.select("li.product__item, div.product__item, li[class*='product']")
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=False, args=["--no-sandbox"])
+        page = browser.new_page(
+            viewport={"width": 1280, "height": 900},
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+        )
 
-                for prod in tarjetas:
-                    link_elem = prod.find("a", href=lambda h: h and "/p/" in h)
-                    if not link_elem:
+        for url in urls:
+            try:
+                print(f"Abriendo: {url}")
+                page.goto(url, timeout=60000, wait_until="domcontentloaded")
+                time.sleep(4 + random.uniform(0.5, 1.5))
+
+                for _ in range(3):
+                    page.mouse.wheel(0, 1000)
+                    time.sleep(1.5 + random.uniform(0.5, 1))
+
+                links = page.query_selector_all("a[href*='/p/']")
+                print(f"  Encontrados {len(links)} links - vamos a revisar maximo 40")
+
+                contador = 0
+                for link_elem in links:
+                    if contador >= 40:
+                        break
+                    try:
+                        enlace_raw = link_elem.get_attribute("href")
+                        if not enlace_raw:
+                            continue
+                        enlace = f"https://www.alkosto.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
+                        enlace = enlace.split("?")[0]
+                        if enlace in enlaces_vistos:
+                            continue
+                        if "/p/" not in enlace:
+                            continue
+
+                        texto_tarjeta = link_elem.evaluate("""el => {
+                            let p = el;
+                            for (let i = 0; i < 6; i++) {
+                                p = p.parentElement;
+                                if (!p) break;
+                                if (p.innerText && p.innerText.includes('$')) return p.innerText;
+                            }
+                            return el.innerText || '';
+                        }""")
+
+                        if not texto_tarjeta or "$" not in texto_tarjeta:
+                            continue
+
+                        lineas = [l.strip() for l in texto_tarjeta.split("\n") if l.strip()]
+                        nombre = lineas[0] if lineas else ""
+                        if not nombre or len(nombre) < 6:
+                            continue
+
+                        imagen = "https://via.placeholder.com/200?text=Alkosto"
+                        try:
+                            img_src = link_elem.evaluate("""el => {
+                                let p = el;
+                                for (let i = 0; i < 6; i++) {
+                                    p = p.parentElement;
+                                    if (!p) break;
+                                    let img = p.querySelector('img');
+                                    if (img) return img.getAttribute('data-src') || img.getAttribute('src') || '';
+                                }
+                                return '';
+                            }""")
+                            if img_src:
+                                if img_src.startswith("//"):
+                                    imagen = "https:" + img_src
+                                elif img_src.startswith("/"):
+                                    imagen = "https://www.alkosto.com" + img_src
+                                elif img_src.startswith("http"):
+                                    imagen = img_src
+                        except Exception:
+                            pass
+
+                        precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto_tarjeta)
+                        precios_num = sorted(list(set([
+                            int(re.sub(r'[^\d]', '', pr)) for pr in precios_raw
+                            if int(re.sub(r'[^\d]', '', pr) or 0) > 30000
+                        ])), reverse=True)
+
+                        if len(precios_num) < 2:
+                            continue
+
+                        precio_normal = precios_num[0]
+                        precio_oferta = precios_num[-1]
+                        precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
+
+                        if precio_oferta <= 0 or precio_normal <= precio_oferta:
+                            continue
+
+                        descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
+
+                        if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
+                            enlaces_vistos.add(enlace)
+                            contador += 1
+                            ofertas.append({
+                                "Nombre": nombre,
+                                "Precio Normal": precio_normal,
+                                "Precio Oferta": precio_oferta,
+                                "Precio Tarjeta": precio_tarjeta,
+                                "Precio Addi": None,
+                                "Descuento": descuento,
+                                "Enlace": enlace,
+                                "Enlace Directo": enlace,
+                                "Imagen": imagen,
+                                "Almacen": "Alkosto"
+                            })
+                    except Exception:
                         continue
 
-                    enlace_raw = link_elem['href']
-                    enlace = f"https://www.alkosto.com{enlace_raw}" if enlace_raw.startswith("/") else enlace_raw
-                    if enlace in enlaces_vistos:
-                        continue
+                print(f"  Categoria lista. Llevamos {len(ofertas)} ofertas en total.")
+                print("  Pausa de 6 segundos...")
+                time.sleep(6)
 
-                    nombre_elem = prod.find(["h2", "h3", "h4"], class_=lambda x: x and ("title" in str(x).lower() or "name" in str(x).lower()))
-                    nombre = nombre_elem.get_text(strip=True) if nombre_elem else link_elem.get_text(strip=True)
-                    if not nombre or len(nombre) < 6:
-                        continue
+            except Exception as e:
+                print(f"Error en Alkosto ({url}): {e}")
 
-                    img_elem = prod.find("img")
-                    imagen = "https://via.placeholder.com/200?text=Alkosto"
-                    if img_elem:
-                        src = img_elem.get("data-src") or img_elem.get("src") or img_elem.get("srcset")
-                        if src and "http" in str(src):
-                            imagen = src.split()[0]
-                        elif src and str(src).startswith("//"):
-                            imagen = "https:" + src.split()[0]
-                        elif src and str(src).startswith("/"):
-                            imagen = "https://www.alkosto.com" + src.split()[0]
-
-                    texto = prod.get_text(separator=" ", strip=True)
-                    precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto)
-                    precios_num = sorted(list(set([
-                        int(re.sub(r'[^\d]', '', pr)) for pr in precios_raw
-                        if int(re.sub(r'[^\d]', '', pr) or 0) > 30000
-                    ])), reverse=True)
-
-                    if len(precios_num) < 2:
-                        continue
-
-                    precio_normal = precios_num[0]
-                    precio_oferta = precios_num[-1]
-                    # En Alkosto, el precio del medio es el de Tarjeta Alkosto
-                    precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
-
-                    if precio_oferta <= 0 or precio_normal <= precio_oferta:
-                        continue
-
-                    descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
-
-                    if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
-                        enlaces_vistos.add(enlace)
-                        ofertas.append({
-                            "Nombre": nombre,
-                            # Guardamos NUMEROS, el $ lo pone app.py con formato_pesos
-                            "Precio Normal": precio_normal,
-                            "Precio Oferta": precio_oferta,
-                            "Precio Tarjeta": precio_tarjeta,
-                            "Precio Addi": None,
-                            "Descuento": descuento,
-                            "Enlace": enlace,
-                            "Enlace Directo": enlace,
-                            "Imagen": imagen,
-                            "Almacen": "Alkosto"
-                        })
-        except Exception as e:
-            print(f"Error en Alkosto ({url}): {e}")
+        browser.close()
 
     print(f"Alkosto aportó: {len(ofertas)} ofertas reales")
     return ofertas
 
 if __name__ == "__main__":
-    print(extraer_alkosto()[:2])
+    resultado = extraer_alkosto()
+    print(resultado[:2])
