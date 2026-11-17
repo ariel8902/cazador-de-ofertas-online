@@ -3,6 +3,8 @@ import pandas as pd
 import json
 import os
 import base64
+import urllib.request
+import time
 
 from exito import extraer_exito
 from alkosto import extraer_alkosto
@@ -33,20 +35,17 @@ img_ktronix = obtener_base64_imagen("ktronix.png")
 # --- ESTILOS CSS: LOGOS GRANDES FIJOS Y BANNER AMARILLO COMPACTO ---
 st.markdown("""
     <style>
-    /* Fondo general de la aplicación */
     .stApp {
         background-color: #F8FAFC;
         margin-top: 15px;
     }
 
-    /* Barra superior nativa limpia y fija */
     header[data-testid="stHeader"] {
         background-color: #FFFFFF !important;
         border-bottom: 1px solid #E2E8F0 !important;
         visibility: visible !important;
     }
 
-    /* Contenedor fijo, estático y perfectamente centrado en la franja blanca */
     .top-fixed-logos-bar {
         position: fixed;
         top: 2px;
@@ -72,7 +71,6 @@ st.markdown("""
         transform: scale(1.08);
     }
 
-    /* Banner Principal Compacto */
     .main-header-banner {
         background: #FFD100;
         padding: 12px 20px;
@@ -103,7 +101,6 @@ st.markdown("""
         font-weight: 700;
     }
 
-    /* Tarjetas de Producto Modernas */
     div[data-testid="stVerticalBlock"] div[data-testid="stContainer"] {
         background-color: #FFFFFF;
         border: 1px solid #CBD5E1;
@@ -117,7 +114,6 @@ st.markdown("""
         box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
-    /* Estilo de Botones */
     .stButton>button {
         border-radius: 8px;
         font-weight: 600;
@@ -131,18 +127,41 @@ if 'vistas' not in st.session_state:
 if 'clics' not in st.session_state:
     st.session_state.clics = 38
 
-# Cargar SIEMPRE las ofertas más recientes directamente desde ofertas.json
-ofertas_actuales = []
-if os.path.exists("ofertas.json"):
-    try:
-        with open("ofertas.json", "r", encoding="utf-8") as f:
-            datos = json.load(f)
-            if isinstance(datos, list):
-                ofertas_actuales = datos
-    except Exception:
-        ofertas_actuales = []
+# --- LECTURA EN VIVO DIRECTA DESDE GITHUB (SIN CACHÉ ESTANCADA) ---
+@st.cache_data(ttl=30)
+def obtener_ofertas_en_vivo():
+    timestamp = int(time.time())
+    urls_posibles = [
+        f"https://raw.githubusercontent.com/ariel8902/cazador-de-ofertas-online/principal/ofertas.json?t={timestamp}",
+        f"https://raw.githubusercontent.com/ariel8902/cazador-de-ofertas-online/main/ofertas.json?t={timestamp}"
+    ]
+    datos_crudos = []
+    for url in urls_posibles:
+        try:
+            req = urllib.request.Request(url, headers={"Cache-Control": "no-cache"})
+            with urllib.request.urlopen(req, timeout=8) as resp:
+                if resp.status == 200:
+                    datos_crudos = json.loads(resp.read().decode("utf-8"))
+                    break
+        except Exception:
+            continue
 
-st.session_state.gangas_guardadas = ofertas_actuales
+    if not datos_crudos and os.path.exists("ofertas.json"):
+        try:
+            with open("ofertas.json", "r", encoding="utf-8") as f:
+                datos_crudos = json.load(f)
+        except Exception:
+            datos_crudos = []
+
+    # Filtrar únicamente tarjetas válidas que tengan las llaves oficiales
+    if isinstance(datos_crudos, list):
+        return [
+            item for item in datos_crudos
+            if isinstance(item, dict) and item.get("Almacen") and item.get("Nombre") and item.get("Precio Oferta")
+        ]
+    return []
+
+ofertas_actuales = obtener_ofertas_en_vivo()
 
 # --- PANEL DE ADMINISTRACIÓN OCULTO EN LA BARRA LATERAL ---
 with st.sidebar:
@@ -153,19 +172,9 @@ with st.sidebar:
     with st.expander("🛠️ Panel Admin (Gestión)"):
         st.metric("👁️ Vistas Totales", st.session_state.vistas)
         st.metric("🖱️ Clics a Ofertas", st.session_state.clics)
-        if st.button("🚀 Forzar Rastreo en Vivo"):
-            with st.spinner("Rastreando tiendas aliadas..."):
-                res = []
-                res.extend(extraer_exito())
-                res.extend(extraer_falabella())
-                res.extend(extraer_alkosto())
-                res.extend(extraer_ktronix())
-                if res:
-                    st.session_state.gangas_guardadas = res
-                    with open("ofertas.json", "w", encoding="utf-8") as f:
-                        json.dump(res, f, ensure_ascii=False, indent=2)
-                    st.success(f"¡{len(res)} ofertas actualizadas!")
-                    st.rerun()
+        if st.button("🔄 Actualizar Vitrina Ahora"):
+            st.cache_data.clear()
+            st.rerun()
 
 # --- BARRA SUPERIOR FIJA CON LOS LOGOS AMPLIADOS ---
 st.markdown(f"""
@@ -186,7 +195,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Filtrar ofertas por almacén seleccionado
-ofertas_para_mostrar = st.session_state.gangas_guardadas
+ofertas_para_mostrar = ofertas_actuales
 if almacen != "Todos los Almacenes" and ofertas_para_mostrar:
     almacen_limpio = almacen.lower().replace("é", "e")
     ofertas_para_mostrar = [
@@ -224,4 +233,4 @@ if ofertas_para_mostrar:
                 if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
                     st.session_state.clics += 1
 else:
-    st.info("ℹ️ No hay ofertas cargadas en este momento. Vuelva a consultar más tarde o ejecute el rastreo desde el panel de administración.")
+    st.info("ℹ️ No hay ofertas cargadas en este momento. Vuelva a consultar más tarde.")
