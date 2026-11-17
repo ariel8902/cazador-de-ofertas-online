@@ -11,7 +11,6 @@ def extraer_exito():
 
     base_url = "https://www.exito.com/api/graphql"
     
-    # Consulta puntual de 16 ítems ordenados por mayor descuento
     variables = {
         "first": 16,
         "after": "0",
@@ -31,22 +30,33 @@ def extraer_exito():
     })
     target_url = f"{base_url}?{query_params}"
 
+    headers = {
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc"
+    }
+
     proxy_params = {
         "api_key": api_key,
         "url": target_url,
         "render": "false",
-        "country_code": "co"
+        "country_code": "co",
+        "keep_headers": "true"
     }
 
-    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (render=false)...")
+    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (timeout=70s)...")
     ofertas_validas = []
 
     try:
-        response = requests.get("https://api.scraperapi.com", params=proxy_params, timeout=35)
+        response = requests.get(
+            "https://api.scraperapi.com",
+            params=proxy_params,
+            headers=headers,
+            timeout=70
+        )
         print(f"Código de estado HTTP: {response.status_code}")
         
         if response.status_code != 200:
-            print(f"Detalle respuesta: {response.text[:200]}")
+            print(f"Detalle respuesta: {response.text[:250]}")
             return []
 
         data = response.json()
