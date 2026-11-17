@@ -30,6 +30,19 @@ def formato_pesos(valor):
     # 1959900 -> $ 1.959.900
     return "$ " + f"{n:,}".replace(",", ".")
 
+# --- CORREGIDO: Descuento SIEMPRE con % sin dañar Éxito ---
+def formato_descuento(valor):
+    if valor is None or valor == "":
+        return "0%"
+    # Si ya viene "56%" lo deja igual
+    if isinstance(valor, str) and "%" in valor:
+        return valor.strip()
+    try:
+        n = int(float(str(valor).replace("%", "").strip()))
+        return f"{n}%"
+    except:
+        return str(valor)
+
 # Función para convertir imágenes locales a base64
 def obtener_base64_imagen(ruta):
     if os.path.exists(ruta):
@@ -248,15 +261,31 @@ if ofertas_para_mostrar:
                 # Si ya tiene Addi / Tarjeta / Otros, los muestra. Si no tiene, NO inventa nada.
                 if precio_addi:
                     st.markdown(f"⭐ **Addi:** **{precio_addi}**")
+
+                # --- CORREGIDO: Etiqueta de Tarjeta segun la tienda, SIN dañar Éxito ---
+                # Éxito sigue diciendo exactamente "Precio Tarjeta Éxito" como antes.
+                # Alkosto ahora dice "Precio Tarjeta Alkosto", Falabella "Precio Tarjeta Falabella", etc.
                 if precio_tarjeta:
-                    st.markdown(f"💳 **Precio Tarjeta Éxito:** **{precio_tarjeta}**")
+                    if tienda == "Éxito":
+                        etiqueta_tarjeta = "Precio Tarjeta Éxito"
+                    elif tienda == "Alkosto":
+                        etiqueta_tarjeta = "Precio Tarjeta Alkosto"
+                    elif tienda == "Falabella":
+                        etiqueta_tarjeta = "Precio Tarjeta Falabella"
+                    elif tienda == "Ktronix":
+                        etiqueta_tarjeta = "Precio Tarjeta Ktronix"
+                    else:
+                        etiqueta_tarjeta = f"Precio Tarjeta {tienda}"
+                    st.markdown(f"💳 **{etiqueta_tarjeta}:** **{precio_tarjeta}**")
+
                 if precio_otros:
                     st.markdown(f"💵 **Otros Medios:** **{precio_otros}**")
                 
                 if precio_oferta:
                     st.markdown(f"🔥 **Precio Oferta:** **{precio_oferta}**")
                 
-                st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
+                # --- CORREGIDO: Descuento siempre con % ---
+                st.markdown(f"📉 **Descuento:** 🔥 **{formato_descuento(item.get('Descuento'))}**")
                 
                 if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
                     st.session_state.clics += 1
