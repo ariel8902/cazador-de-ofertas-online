@@ -26,45 +26,43 @@ CATEGORIAS_OBJETIVO = [
     },
 ]
 
+# Definición limpia de la consulta GraphQL fuera de bloques complejos de JS
+GRAPHQL_QUERY = """
+query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
+  productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
+    products {
+      productName
+      linkText
+      items {
+        images {
+          imageUrl
+        }
+        sellers {
+          sellerId
+          commissions
+          commercialOffer {
+            Price
+            ListPrice
+            spotPrice
+            teaser
+          }
+        }
+      }
+    }
+  }
+}
+"""
+
 
 def consultar_via_navegador(page, categoria_path):
-    """Navega directamente a la página de la categoría usando el navegador para que Akamai no bloquee la API."""
-    url = f"https://www.exito.com/{categoria_path}?initialMap=c&initialQuery=category-2&map=category-2,category-3&orderBy=discount:desc"
-    
+    """Navega a la categoría usando el navegador y ejecuta el fetch usando la sesión viva."""
+    url = f"https://www.exito.com/{categoria_path}"
     try:
         page.goto(url, timeout=60000)
-        page.wait_for_timeout(4000)  # Esperar renderizado y carga de productos de la página
+        page.wait_for_timeout(4000)
         
-        # Extraer los datos directamente del estado de la página o realizar la consulta interna interceptada
-        # Alternativa robusta: inyectar el fetch de la API GraphQL usando la sesión viva del navegador
-        productos = page.evaluate("""async () => {
-            const query = `
-                query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
-                  productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
-                    products {
-                      productName
-                      linkText
-                      items {
-                        images {
-                          imageUrl
-                        }
-                        sellers {
-                          sellerId
-                          commissions
-                          commercialOffer {
-                            Price
-                            ListPrice
-                            spotPrice
-                            teaser
-                          }
-                        }
-                      }
-                    }
-                  }
-                }
-            `;
-            
-            const response = await fetch('/api/graphql?operationName=SearchQuery', {
+        productos = page.evaluate("""([catPath, queryStr]) => {
+            return fetch('/api/graphql?operationName=SearchQuery', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,29 +72,30 @@ def consultar_via_navegador(page, categoria_path):
                     operationName: "SearchQuery",
                     variables: {
                         fullText: "",
-                        selectedFacets: [{key: "c", value: arguments[0]}],
+                        selectedFacets: [{key: "c", value: catPath}],
                         orderBy: "discount:desc",
                         from: 0,
                         to: 24
                     },
-                    query: query
+                    query: queryStr
                 })
-            });
-            
-            if (!response.ok) return [];
-            const json = await response.json();
-            return json.data?.productSearch?.products || [];
-        }, categoria_path)
+            })
+            .then(res => res.json())
+            .then(json => json.data && json.data.productSearch && json.data.productSearch.products ? json.data.productSearch.products : [])
+            .catch(() => []);
+        }""", [categoria_path, GRAPHQL_QUERY])
         
-        return productos
+        return productos if isinstance(productos, list) else []
     except Exception as e:
-        print(f"[!] Error al consultar la categoría {categoria_path} vía navegador: {str(e)}")
+        print(f"[!] Error al consultar la categoría {categoria_path}: {str(e)}")
         return []
 
 
 def procesar_y_filtrar_productos(productos_brutos):
     """Aplica el filtro estricto de venta directa, precios reales y descuento >= 50%."""
     productos_procesados = []
+    if not isinstance(productos_brutos, list):
+        return productos_procesados
 
     for p in productos_brutos:
         nombre = p.get("productName", "")
@@ -156,7 +155,7 @@ def actualizar_base_datos(nuevos_productos):
             print("[!] Advertencia: ofertas.json tenía formato corrupto. Se reinicializa.")
             datos_existentes = []
 
-    # Aislar y remover registros previos de Éxito, conservando intactas las demás tiendas (Alkosto, Catronix, etc.)
+    # Aislar y remover registros previos de Éxito, conservando intactas las demás tiendas
     datos_filtrados = [item for item in datos_existentes if item.get("Almacen") != "Éxito"]
     datos_actualizados = datos_filtrados + nuevos_productos
 
@@ -167,7 +166,7 @@ def actualizar_base_datos(nuevos_productos):
 
 
 def extraer_exito():
-    """Función principal de extracción que utiliza Playwright para saltar Akamai de forma nativa."""
+    """Función principal de extracción utilizando Playwright de forma nativa para saltar Akamai."""
     print("[*] Iniciando sesión con Playwright para sortear Akamai...")
     todos_los_hallazgos = []
 
@@ -180,7 +179,7 @@ def extraer_exito():
         )
         page = context.new_page()
         
-        # Cargar la página principal primero para establecer las cookies del WAF
+        # Cargar página principal para inicializar WAF y cookies de sesión
         page.goto("https://www.exito.com/", timeout=60000)
         page.wait_for_timeout(5000)
 
@@ -190,16 +189,11 @@ def extraer_exito():
             filtrados = procesar_y_filtrar_productos(productos_brutos)
             print(f"[+] Encontrados {len(filtrados)} productos válidos con >= 50% en {cat['nombre']}")
             todos_los_hallazgos.extend(filtrados)
-            time.sleep(2)  # Pausa de cortesía entre categorías
+            time.sleep(2)
 
         browser.close()
 
-    if todos_los_hallazgos:
-        actualizar_base_datos(todos_los_hallazgos)
-    else:
-        print("[!] El rastreo finalizó sin arrojar productos bajo el filtro estricto en las categorías consultadas.")
-        actualizar_base_datos([])
-
+    actualizar_base_datos(todos_los_hallazgos)
     return todos_los_hallazgos
 
 
