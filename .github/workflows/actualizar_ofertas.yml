@@ -1,0 +1,38 @@
+name: Ejecutar Scrapers de Tiendas
+
+on:
+  schedule:
+    # Corre 2 veces al día: 7am y 7pm hora Colombia (12:00 y 00:00 UTC)
+    - cron: '0 12 * * *'
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Permite dispararlo a mano desde la interfaz de GitHub
+
+jobs:
+  scrapear:
+    # Corre en tu equipo local con IP residencial conectada como runner
+    runs-on: self-hosted
+
+    steps:
+      - name: Bajar el código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependencias puras (requests)
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      - name: Correr scraper Éxito (API VTEX)
+        run: python -u -c "from exito import extraer_exito; extraer_exito()"
+
+      - name: Subir ofertas.json actualizado al repositorio
+        run: |
+          git config user.name "Scraper Bot Casero"
+          git config user.email "bot@casero.com"
+          git add ofertas.json ofertas.json.bak || true
+          git commit -m "Auto: Actualización ofertas Éxito por IP residencial [skip ci]" || echo "Sin cambios"
+          git push || echo "Nada que subir"
