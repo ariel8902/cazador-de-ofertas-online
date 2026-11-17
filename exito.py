@@ -21,7 +21,7 @@ def es_producto_valido_comercialmente(nombre, slug, sellers):
     return vende_exito
 
 def extraer_exito():
-    print("Iniciando extracción profesional de Éxito (GraphQL SearchQuery + Auditoría Estricta)...")
+    print("Iniciando extracción profesional y unificada de Éxito (GraphQL SearchQuery + Precios Preferenciales)...")
     ofertas_validas = []
     urls_vistas = set()
 
@@ -125,8 +125,8 @@ def extraer_exito():
                     if precio_lista <= 0 or precio_oferta <= 0 or precio_oferta >= precio_lista:
                         continue
 
-                    # Extracción y aislamiento estricto de Tarjeta Éxito (excluyendo Addi/terceros)
-                    precio_tarjeta_real = None
+                    # Unificación profesional de precios preferenciales (Tarjeta Éxito o Addi)
+                    precio_preferencial = None
                     for seller in sellers:
                         if "exito" not in str(seller.get("sellerName", "")).lower() and str(seller.get("sellerId", "")) != "1":
                             continue
@@ -134,18 +134,19 @@ def extraer_exito():
                         if offer.get("AvailableQuantity", 0) > 0:
                             for teaser in offer.get("teasers", []):
                                 t_name = teaser.get("name", "").lower()
-                                if ("tarjeta" in t_name and "exito" in t_name) or "exito1" in t_name:
-                                    if "addi" in t_name or "puntos" in t_name:
-                                        continue
+                                es_tarjeta = ("tarjeta" in t_name and "exito" in t_name) or "exito1" in t_name
+                                es_addi = "addi" in t_name
+
+                                if es_tarjeta or es_addi:
                                     for param in teaser.get("effects", {}).get("parameters", []):
                                         if param.get("name") == "PromotionalPriceTableItemsDiscount":
                                             descuento_tabla = float(param.get("value", 0))
                                             precio_calc = precio_lista - descuento_tabla
                                             if 0 < precio_calc < precio_oferta:
-                                                if precio_tarjeta_real is None or precio_calc < precio_tarjeta_real:
-                                                    precio_tarjeta_real = precio_calc
+                                                if precio_preferencial is None or precio_calc < precio_preferencial:
+                                                    precio_preferencial = precio_calc
 
-                    mejor_precio = precio_tarjeta_real if precio_tarjeta_real is not None else precio_oferta
+                    mejor_precio = precio_preferencial if precio_preferencial is not None else precio_oferta
                     porcentaje_descuento = round((1 - (mejor_precio / precio_lista)) * 100)
 
                     # Auditoría comercial estricta: rango real verificado 50% - 85%
@@ -159,7 +160,7 @@ def extraer_exito():
                             "Nombre": nombre,
                             "Imagen": imagen_url,
                             "Precio Normal": formatear_pesos(precio_lista),
-                            "Precio Tarjeta": formatear_pesos(precio_tarjeta_real) if precio_tarjeta_real else None,
+                            "Precio Tarjeta": formatear_pesos(precio_preferencial) if precio_preferencial else None,
                             "Precio Oferta": formatear_pesos(precio_oferta),
                             "Descuento": f"{porcentaje_descuento}% OFF",
                             "Enlace Directo": url_producto
