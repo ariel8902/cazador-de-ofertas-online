@@ -6,10 +6,6 @@ import base64
 import urllib.request
 import time
 
-from exito import extraer_exito
-from alkosto import extraer_alkosto
-from ktronix import extraer_ktronix
-from falabella import extraer_falabella
 
 # Configuración de página con la marca comercial definitiva
 st.set_page_config(
