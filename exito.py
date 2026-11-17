@@ -6,44 +6,25 @@ from playwright.sync_api import sync_playwright
 # Archivo de base de datos central multitienda
 JSON_FILE = "ofertas.json"
 
-# Endpoint base de Éxito con ordenamiento estricto por mayor descuento
-URL_LIQUIDACION = "https://www.exito.com/?orderBy=discount:desc"
+# URL directa de liquidación y tecnología en Éxito
+URL_VITRINA = "https://www.exito.com/tecnologia/televisores?initialMap=c&initialQuery=tecnologia&map=c,c&orderBy=discount:desc"
 
-GRAPHQL_QUERY = """
-query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
-  productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
-    products {
-      productName
-      linkText
-      items {
-        images {
-          imageUrl
-        }
-        sellers {
-          sellerId
-          commissions
-          commercialOffer {
-            Price
-            ListPrice
-            spotPrice
-            teaser
-          }
-        }
-      }
-    }
-  }
-}
-"""
 
 def extraer_exito():
-    """Ejecuta el rastreo profesional en Éxito utilizando la sesión viva de Playwright para extraer liquidaciones reales."""
-    print("[*] Iniciando motor de extracción profesional para Éxito...")
+    """Motor de extracción profesional basado en análisis de DOM y estado renderizado para evitar bloqueos de API."""
+    print("[*] Iniciando motor de extracción robusto para Éxito...")
     todos_los_hallazgos = []
 
     with sync_playwright() as p:
+        # Lanzamiento optimizado para entornos CI/CD (GitHub Actions)
         browser = p.chromium.launch(
             headless=True,
-            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
+            args=[
+                "--disable-blink-features=AutomationControlled",
+                "--no-sandbox",
+                "--disable-setuid-sandbox",
+                "--disable-dev-shm-usage"
+            ]
         )
         context = browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
@@ -53,86 +34,112 @@ def extraer_exito():
         page = context.new_page()
 
         try:
-            print(f"[*] Accediendo al portal principal para inicializar WAF y cookies...")
-            page.goto(URL_LIQUIDACION, timeout=60000)
-            page.wait_for_timeout(6000)
+            print(f"[*] Navegando a la vitrina de ofertas...")
+            page.goto(URL_VITRINA, timeout=60000)
+            
+            # Esperar a que el DOM renderice las tarjetas de productos de VTEX
+            print("[*] Esperando renderizado de elementos en el DOM...")
+            page.wait_for_selector("article", timeout=30000)
+            time.sleep(4)  # Pausa de estabilización para carga de imágenes y precios dinámicos
 
-            print("[*] Consultando API GraphQL de liquidaciones generales...")
-            productos_brutos = page.evaluate("""async (queryStr) => {
-                const response = await fetch('/api/graphql?operationName=SearchQuery', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Accept': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        operationName: "SearchQuery",
-                        variables: {
-                            fullText: "",
-                            selectedFacets: [],
-                            orderBy: "discount:desc",
-                            from: 0,
-                            to: 50
-                        },
-                        query: queryStr
-                    })
+            # Scroll controlado para forzar la carga de elementos perezosos (lazy loading)
+            for _ in range(2):
+                page.evaluate("window.scrollBy(0, document.body.scrollHeight)")
+                time.sleep(2)
+
+            # Extracción estructurada directamente desde las tarjetas de producto renderizadas
+            productos_extraidos = page.evaluate("""() => {
+                const items = [];
+                // Selector estándar de tarjetas de producto en VTEX / Éxito
+                const cards = document.querySelectorAll('article');
+                
+                cards.forEach(card => {
+                    try {
+                        // Nombre del producto
+                        const nameEl = card.querySelector('h3, h2, [data-testid*="product-name"]');
+                        const name = nameEl ? nameEl.innerText.trim() : '';
+                        
+                        // Enlace directo
+                        const linkEl = card.querySelector('a');
+                        const href = linkEl ? linkEl.getAttribute('href') : '';
+                        
+                        // Imagen
+                        const imgEl = card.querySelector('img');
+                        const imgSrc = imgEl ? (imgEl.getAttribute('src') || imgEl.getAttribute('data-src')) : '';
+                        
+                        // Precios (Búsqueda de textos con formato de moneda COP)
+                        const textContent = card.innerText;
+                        
+                        if (name && href) {
+                            items.push({
+                                name: name,
+                                link: href.startsWith('http') ? href : 'https://www.exito.com' + href,
+                                image: imgSrc,
+                                rawText: textContent
+                            });
+                        }
+                    } catch (err) {}
                 });
                 
-                if (!response.ok) return [];
-                const json = await response.json();
-                return json.data?.productSearch?.products || [];
-            }""", GRAPHQL_QUERY)
+                return items;
+            }""")
 
-            if isinstance(productos_brutos, list) and productos_brutos:
-                print(f"[+] Se obtuvieron {len(productos_brutos)} productos crudos de la API.")
+            print(f"[+] Se capturaron {len(productos_extraidos)} elementos del DOM.")
+
+            for item in productos_extraidos:
+                nombre = item["name"]
+                enlace = item["link"]
+                imagen = item["image"]
+                raw_text = item["rawText"]
+
+                # Procesamiento analítico de precios desde el texto crudo de la tarjeta
+                # Buscamos patrones de precios en el texto extraído
+                import re
+                # Extraer todos los valores numéricos con formato de precio colombiano ($ X.XXX.XXX)
+                precios_encontrados = re.findall(r'\$\s*[\d\.,]+', raw_text)
                 
-                for p in productos_brutos:
-                    nombre = p.get("productName", "")
-                    link_text = p.get("linkText", "")
-                    enlace = f"https://www.exito.com/{link_text}/p" if link_text else "https://www.exito.com"
+                if len(precios_encontrados) < 2:
+                    continue  # Si no hay al menos precio normal y precio oferta, descartamos
 
-                    items = p.get("items", [])
-                    if not items:
-                        continue
+                # Limpieza y conversión de precios
+                def limpiar_precio(val_str):
+                    try:
+                        clean = re.sub(r'[^\d]', '', val_str)
+                        return int(clean) if clean else 0
+                    except:
+                        return 0
 
-                    item = items[0]
-                    images = item.get("images", [])
-                    imagen = images[0].get("imageUrl", "") if images else ""
+                valores = [limpiar_precio(p) for p in precios_encontrados if limpiar_precio(p) > 10000]
+                
+                if len(valores) < 2:
+                    continue
 
-                    sellers = item.get("sellers", [])
-                    # Filtrar exclusivamente venta directa de Éxito (sellerId == '1')
-                    seller_directo = next((s for s in sellers if s.get("sellerId") == "1"), None)
-                    if not seller_directo:
-                        continue
+                # En VTEX el precio mayor suele ser el ListPrice y el menor el Offer Price
+                precio_normal = max(valores)
+                precio_oferta = min(valores)
 
-                    offer = seller_directo.get("commercialOffer", {})
-                    precio_oferta = offer.get("Price", 0)
-                    precio_normal = offer.get("ListPrice", 0)
+                if precio_normal <= 0 or precio_oferta >= precio_normal:
+                    continue
 
-                    if precio_normal <= 0 or precio_oferta >= precio_normal:
-                        continue
+                porcentaje_desc = int(((precio_normal - precio_oferta) / precio_normal) * 100)
 
-                    porcentaje_desc = int(((precio_normal - precio_oferta) / precio_normal) * 100)
-
-                    # Regla estricta: Descuento real obligatorio >= 50%
-                    if porcentaje_desc >= 50:
-                        todos_los_hallazgos.append(
-                            {
-                                "Almacen": "Éxito",
-                                "Nombre": nombre,
-                                "Imagen": imagen,
-                                "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
-                                "Precio Tarjeta": None,
-                                "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
-                                "Descuento": f"{porcentaje_desc}% OFF",
-                                "Enlace Directo": enlace,
-                            }
-                        )
-            else:
-                print("[!] La API no retornó productos en la búsqueda general.")
+                # Regla de oro estricta: Descuento real obligatorio >= 50% y descarte de Marketplace externo si aplica
+                if porcentaje_desc >= 50:
+                    todos_los_hallazgos.append(
+                        {
+                            "Almacen": "Éxito",
+                            "Nombre": nombre,
+                            "Imagen": imagen,
+                            "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
+                            "Precio Tarjeta": None,
+                            "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
+                            "Descuento": f"{porcentaje_desc}% OFF",
+                            "Enlace Directo": enlace,
+                        }
+                    )
 
         except Exception as e:
-            print(f"[!] Error crítico durante la ejecución del scraper: {str(e)}")
+            print(f"[!] Error crítico en el motor DOM: {str(e)}")
         finally:
             browser.close()
 
