@@ -1,9 +1,7 @@
 import json
-import time
-import urllib.parse
 import requests
 
-def probar_extraccion_exito():
+def extraer_exito():
     base_url = "https://www.exito.com/api/graphql"
     
     # Consulta puntual de 16 ítems ordenados por mayor descuento
@@ -31,20 +29,20 @@ def probar_extraccion_exito():
         "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc"
     }
 
-    print("Iniciando consulta única de prueba a Éxito GraphQL...")
+    print("Iniciando consulta puntual a Éxito GraphQL...")
+    ofertas_validas = []
+
     try:
         response = requests.get(base_url, params=params, headers=headers, timeout=20)
         print(f"Código de estado HTTP: {response.status_code}")
         
         if response.status_code != 200:
-            print("La respuesta no fue 200. Deteniendo ejecución para evitar reintentos.")
-            return
+            print("La respuesta no fue 200. Deteniendo ejecución para evitar bloqueos.")
+            return []
 
         data = response.json()
         edges = data.get("data", {}).get("search", {}).get("products", {}).get("edges", [])
-        print(f"Productos recibidos en el bloque: {len(edges)}\n")
-
-        ofertas_validas = []
+        print(f"Productos recibidos en el bloque: {len(edges)}")
 
         for edge in edges:
             node = edge.get("node", {})
@@ -52,11 +50,9 @@ def probar_extraccion_exito():
             slug = node.get("slug", "")
             url_producto = f"https://www.exito.com/{slug}/p" if slug else ""
             
-            # Imagen principal
             imagenes = node.get("image", [])
             imagen_url = imagenes[0].get("url", "") if imagenes else ""
 
-            # Evaluar ofertas disponibles
             offers = node.get("offers", {}).get("offers", [])
             oferta_activa = next((o for o in offers if o.get("quantity", 0) > 0), None)
             
@@ -69,7 +65,6 @@ def probar_extraccion_exito():
             if precio_lista <= 0 or precio_oferta <= 0:
                 continue
 
-            # Revisar descuentos especiales (Tarjeta Éxito / Aliados) en sellers -> teasers
             precio_tarjeta = precio_oferta
             medio_pago_especial = None
             
@@ -92,6 +87,7 @@ def probar_extraccion_exito():
 
             if porcentaje_descuento >= 50:
                 ofertas_validas.append({
+                    "tienda": "Éxito",
                     "titulo": nombre,
                     "imagen": imagen_url,
                     "url": url_producto,
@@ -103,11 +99,13 @@ def probar_extraccion_exito():
                     "es_marketplace": node.get("productType", {}).get("isMkp", True)
                 })
 
-        print(f"=== OFERTAS >= 50% ENCONTRADAS: {len(ofertas_validas)} ===")
-        print(json.dumps(ofertas_validas, indent=2, ensure_ascii=False))
+        print(f"Ofertas >= 50% filtradas: {len(ofertas_validas)}")
+        return ofertas_validas
 
     except requests.RequestException as e:
         print(f"Error de red controlado: {e}")
+        return []
 
 if __name__ == "__main__":
-    probar_extraccion_exito()
+    resultados = extraer_exito()
+    print(json.dumps(resultados, indent=2, ensure_ascii=False))
