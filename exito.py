@@ -1,10 +1,12 @@
+import os
 import json
+import urllib.parse
 import requests
 
 def extraer_exito():
+    api_key = os.getenv("SCRAPERAPI_KEY", "").strip()
     base_url = "https://www.exito.com/api/graphql"
     
-    # Consulta puntual de 16 ítems ordenados por mayor descuento
     variables = {
         "first": 16,
         "after": "0",
@@ -18,26 +20,38 @@ def extraer_exito():
         ]
     }
     
-    params = {
+    query_params = urllib.parse.urlencode({
         "operationName": "SearchQuery",
         "variables": json.dumps(variables, separators=(",", ":"))
-    }
-    
+    })
+    target_url = f"{base_url}?{query_params}"
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
         "Accept": "application/json",
         "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc"
     }
 
-    print("Iniciando consulta puntual a Éxito GraphQL...")
+    print("Iniciando consulta puntual a Éxito GraphQL vía túnel...")
     ofertas_validas = []
 
     try:
-        response = requests.get(base_url, params=params, headers=headers, timeout=20)
+        if api_key:
+            proxy_params = {
+                "api_key": api_key,
+                "url": target_url,
+                "render": "false",
+                "country_code": "co"
+            }
+            response = requests.get("http://api.scraperapi.com", params=proxy_params, headers=headers, timeout=30)
+        else:
+            print("Aviso: No se detectó SCRAPERAPI_KEY, intentando directo...")
+            response = requests.get(target_url, headers=headers, timeout=20)
+
         print(f"Código de estado HTTP: {response.status_code}")
         
         if response.status_code != 200:
-            print("La respuesta no fue 200. Deteniendo ejecución para evitar bloqueos.")
+            print("La respuesta no fue 200. Deteniendo ejecución.")
             return []
 
         data = response.json()
@@ -102,10 +116,6 @@ def extraer_exito():
         print(f"Ofertas >= 50% filtradas: {len(ofertas_validas)}")
         return ofertas_validas
 
-    except requests.RequestException as e:
-        print(f"Error de red controlado: {e}")
+    except Exception as e:
+        print(f"Error controlado: {e}")
         return []
-
-if __name__ == "__main__":
-    resultados = extraer_exito()
-    print(json.dumps(resultados, indent=2, ensure_ascii=False))
