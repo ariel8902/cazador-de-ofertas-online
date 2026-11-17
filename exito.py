@@ -2,7 +2,6 @@ import json
 import os
 import time
 from playwright.sync_api import sync_playwright
-import requests
 
 # Archivo de base de datos central multitienda
 JSON_FILE = "ofertas.json"
@@ -28,35 +27,8 @@ CATEGORIAS_OBJETIVO = [
 ]
 
 
-def obtener_sesion_playwright():
-    """Inicia sesión con Playwright para sortear el WAF de Akamai y extraer cookies válidas."""
-    print("[*] Iniciando sesión con Playwright para sortear Akamai...")
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
-        )
-        page = context.new_page()
-        page.goto("https://www.exito.com/", timeout=60000)
-        page.wait_for_timeout(5000)  # Esperar resolución de retos WAF
-
-        cookies = context.cookies()
-        cookie_str = "; ".join([f"{c['name']}={c['value']}" for c in cookies])
-        
-        headers = {
-            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Content-Type": "application/json",
-            "Referer": "https://www.exito.com/",
-            "Origin": "https://www.exito.com/",
-            "Cookie": cookie_str
-        }
-
-        browser.close()
-        return headers
-
-
-def consultar_graphql(headers, categoria_path):
-    """Consulta la API GraphQL oficial de Éxito con la estructura exacta validada y limpia."""
+def consultar_graphql_con_playwright(context, categoria_path):
+    """Consulta la API GraphQL usando el contexto de Playwright para evitar 403 por WAF (Akamai)."""
     url = "https://www.exito.com/api/graphql?operationName=SearchQuery"
 
     graphql_query = """
@@ -98,12 +70,22 @@ def consultar_graphql(headers, categoria_path):
     }
 
     try:
-        response = requests.post(url, headers=headers, json=payload, timeout=15)
-        if response.status_code == 200:
+        # Petición ejecutada desde el contexto del navegador para conservar huella digital y bypass de WAF
+        response = context.request.post(
+            url,
+            data=payload,
+            headers={
+                "Content-Type": "application/json",
+                "Referer": "https://www.exito.com/",
+                "Origin": "https://www.exito.com/"
+            }
+        )
+
+        if response.status == 200:
             data = response.json()
             return data.get("data", {}).get("productSearch", {}).get("products", [])
         else:
-            print(f"[!] Alerta: Código HTTP {response.status_code} en categoría {categoria_path}")
+            print(f"[!] Alerta: Código HTTP {response.status} en categoría {categoria_path}")
             return []
     except Exception as e:
         print(f"[!] Error de conexión en categoría {categoria_path}: {str(e)}")
@@ -183,23 +165,35 @@ def actualizar_base_datos(nuevos_productos):
 
 
 def extraer_exito():
-    """Función principal requerida por el importador del workflow."""
-    headers = obtener_sesion_playwright()
+    """Función principal requerida por el importador del workflow, con retorno de lista para evitar NoneType."""
+    print("[*] Iniciando sesión con Playwright para sortear Akamai...")
     todos_los_hallazgos = []
 
-    for cat in CATEGORIAS_OBJETIVO:
-        print(f"[*] Rastreando categoría: {cat['nombre']} ({cat['query_args']})...")
-        productos_brutos = consultar_graphql(headers, cat["query_args"])
-        filtrados = procesar_y_filtrar_productos(productos_brutos)
-        print(f"[+] Encontrados {len(filtrados)} productos válidos con >= 50% en {cat['nombre']}")
-        todos_los_hallazgos.extend(filtrados)
-        # Pausa profesional de cortesía entre peticiones para proteger la sesión
-        time.sleep(2)
+    with sync_playwright() as p:
+        browser = p.chromium.launch(headless=True)
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+        )
+        page = context.new_page()
+        page.goto("https://www.exito.com/", timeout=60000)
+        page.wait_for_timeout(5000)  # Cargar pasarela y cookies iniciales del WAF
+
+        for cat in CATEGORIAS_OBJETIVO:
+            print(f"[*] Rastreando categoría: {cat['nombre']} ({cat['query_args']})...")
+            productos_brutos = consultar_graphql_con_playwright(context, cat["query_args"])
+            filtrados = procesar_y_filtrar_productos(productos_brutos)
+            print(f"[+] Encontrados {len(filtrados)} productos válidos con >= 50% en {cat['nombre']}")
+            todos_los_hallazgos.extend(filtrados)
+            time.sleep(2)
+
+        browser.close()
 
     if todos_los_hallazgos:
         actualizar_base_datos(todos_los_hallazgos)
     else:
         print("[!] El rastreo finalizó sin arrojar productos bajo el filtro estricto en las categorías consultadas.")
+
+    return todos_los_hallazgos
 
 
 if __name__ == "__main__":
