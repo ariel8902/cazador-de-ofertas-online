@@ -1,96 +1,65 @@
-name: Actualizar Ofertas Automáticamente
+name: Cazador de Ofertas Online
 
 on:
-  schedule:
-    - cron: '0 */6 * * *'
   workflow_dispatch:
-    inputs:
-      tienda:
-        description: 'Tienda a ejecutar (para pruebas rápidas)'
-        required: true
-        default: 'exito'
-        type: choice
-        options:
-          - exito
-          - falabella
-          - alkosto
-          - ktronix
-          - todas
+  schedule:
+    - cron: '0 */4 * * *'
 
 permissions:
   contents: write
 
 jobs:
-  actualizar:
+  scrape-ofertas:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
 
     steps:
-      - name: Descargar código del repositorio
+      - name: Checkout del repositorio
         uses: actions/checkout@v4
 
       - name: Configurar Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: '3.11'
 
       - name: Instalar dependencias Python
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install requests pandas beautifulsoup4 lxml
 
       - name: Ejecutar Scrapers de Tiendas
         env:
-          TIENDA_OBJETIVO: ${{ github.event.inputs.tienda || 'todas' }}
+          SCRAPERAPI_KEY: ${{ secrets.SCRAPERAPI_KEY }}
         run: |
           python -u -c "
-          import os, json
+          import json
+          import os
           from exito import extraer_exito
-          from falabella import extraer_falabella
-          from alkosto import extraer_alkosto
-          from ktronix import extraer_ktronix
 
-          objetivo = os.getenv('TIENDA_OBJETIVO', 'todas').lower()
-          mapa = {
-              'exito': ('Éxito', extraer_exito),
-              'falabella': ('Falabella', extraer_falabella),
-              'alkosto': ('Alkosto', extraer_alkosto),
-              'ktronix': ('Ktronix', extraer_ktronix),
-          }
+          archivo_datos = 'ofertas.json'
+          ofertas_actuales = []
 
-          seleccion = list(mapa.values()) if objetivo == 'todas' else [mapa[objetivo]]
-
-          # Si probamos una sola tienda, conservamos las ofertas previas de las demás
-          ofertas_previas = []
-          if objetivo != 'todas' and os.path.exists('ofertas.json'):
+          if os.path.exists(archivo_datos):
               try:
-                  with open('ofertas.json', 'r', encoding='utf-8') as f:
-                      nombre_actual = mapa[objetivo][0]
-                      ofertas_previas = [o for o in json.load(f) if o.get('Almacen') != nombre_actual]
+                  with open(archivo_datos, 'r', encoding='utf-8') as f:
+                      ofertas_actuales = json.load(f)
               except Exception:
-                  ofertas_previas = []
+                  ofertas_actuales = []
 
-          nuevas = []
-          for nombre, fn in seleccion:
-              try:
-                  res = fn()
-                  if res:
-                      nuevas.extend(res)
-              except Exception as e:
-                  print(f'Error en {fn.__name__}: {e}')
+          # Conservar ofertas previas de otras tiendas y reemplazar las de Éxito con la nueva extracción limpia
+          otras_tiendas = [o for o in ofertas_actuales if o.get('tienda') != 'Éxito']
+          nuevas_exito = extraer_exito()
 
-          total = ofertas_previas + nuevas
-          if total:
-              with open('ofertas.json', 'w', encoding='utf-8') as f:
-                  json.dump(total, f, ensure_ascii=False, indent=2)
-              print(f'Total ofertas guardadas: {len(total)} (Nuevas de {objetivo}: {len(nuevas)})')
-          else:
-              print('No se extrajeron ofertas nuevas en esta corrida.')
+          total_ofertas = otras_tiendas + nuevas_exito
+
+          with open(archivo_datos, 'w', encoding='utf-8') as f:
+              json.dump(total_ofertas, f, indent=2, ensure_ascii=False)
+
+          print(f'Total ofertas guardadas: {len(total_ofertas)} (Nuevas de exito: {len(nuevas_exito)})')
           "
 
       - name: Guardar Cambios en GitHub
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add ofertas.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "🤖 Actualización automática de ofertas" && git pull --rebase origin main && git push)
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add .
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Actualización automática de ofertas" && git push)
