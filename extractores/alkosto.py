@@ -6,15 +6,12 @@ from config import MIN_DESCUENTO, MAX_DESCUENTO
 
 def extraer_alkosto():
     print(f"--- [ALKOSTO] Modo Equilibrado (>= {MIN_DESCUENTO}%) ---")
-
-    # PROMEDIO: 4 categorias buenas, no 2 que es poquito, ni 20 que es mucho
     urls = [
         "https://www.alkosto.com/search?text=celular",
         "https://www.alkosto.com/search?text=televisor",
         "https://www.alkosto.com/search?text=portatil",
         "https://www.alkosto.com/search?text=nevera",
     ]
-
     ofertas = []
     enlaces_vistos = set()
 
@@ -24,20 +21,17 @@ def extraer_alkosto():
             viewport={"width": 1280, "height": 900},
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
         )
-
         for url in urls:
             try:
                 print(f"Abriendo: {url}")
                 page.goto(url, timeout=60000, wait_until="domcontentloaded")
                 time.sleep(4 + random.uniform(0.5, 1.5))
-
                 for _ in range(3):
                     page.mouse.wheel(0, 1000)
                     time.sleep(1.5 + random.uniform(0.5, 1))
 
                 links = page.query_selector_all("a[href*='/p/']")
                 print(f"  Encontrados {len(links)} links - vamos a revisar maximo 40")
-
                 contador = 0
                 for link_elem in links:
                     if contador >= 40:
@@ -62,7 +56,6 @@ def extraer_alkosto():
                             }
                             return el.innerText || '';
                         }""")
-
                         if not texto_tarjeta or "$" not in texto_tarjeta:
                             continue
 
@@ -93,22 +86,68 @@ def extraer_alkosto():
                         except Exception:
                             pass
 
+                        # === CORRECCIÓN: PRECIOS POR ETIQUETA, NO POR ORDEN ===
+                        texto_low = texto_tarjeta.lower()
+                        # Todos los precios
                         precios_raw = re.findall(r'\$\s*[\d\.\,]+', texto_tarjeta)
                         precios_num = sorted(list(set([
                             int(re.sub(r'[^\d]', '', pr)) for pr in precios_raw
                             if int(re.sub(r'[^\d]', '', pr) or 0) > 30000
                         ])), reverse=True)
-
                         if len(precios_num) < 2:
                             continue
 
                         precio_normal = precios_num[0]
-                        precio_oferta = precios_num[-1]
-                        precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
+
+                        # 1. Buscar precio HOY / OFERTA por texto: "hoy" cerca del precio
+                        precio_oferta = None
+                        # Recorrer líneas buscando $ + Hoy en la misma línea o la siguiente
+                        for i, linea in enumerate(lineas):
+                            if "$" in linea:
+                                num = int(re.sub(r'[^\d]', '', linea) or 0)
+                                if num <= 30000 or num == precio_normal:
+                                    continue
+                                contexto = " ".join(lineas[max(0,i-1):i+2]).lower()
+                                if "hoy" in contexto:
+                                    precio_oferta = num
+                                    break
+                        # Si no hay "Hoy", oferta = el mayor que no es normal y no es tarjeta
+                        # (en Alkosto el Hoy siempre es el más alto después del tachado)
+                        if precio_oferta is None:
+                            # Lo dejamos para después, primero buscamos tarjeta
+                            pass
+
+                        # 2. Buscar precio TARJETA ALKOSTO por etiqueta
+                        precio_tarjeta = 0
+                        for i, linea in enumerate(lineas):
+                            if "$" in linea:
+                                num = int(re.sub(r'[^\d]', '', linea) or 0)
+                                if num <= 30000 or num == precio_normal:
+                                    continue
+                                contexto = " ".join(lineas[max(0,i-1):i+2]).lower()
+                                # Solo la azul de Alkosto, ignorar Addi / otras / casita
+                                if "tarjeta" in contexto and "alkosto" in texto_low:
+                                    # Verificar que esta línea esté cerca de la palabra tarjeta
+                                    if "tarjeta" in contexto:
+                                        precio_tarjeta = num
+                                        break
+
+                        # 3. Si no encontramos Hoy, oferta = el mayor restante que no sea tarjeta ni normal
+                        if precio_oferta is None:
+                            restantes = [x for x in precios_num if x != precio_normal and x != precio_tarjeta]
+                            precio_oferta = restantes[0] if restantes else 0
+
+                        # 4. Si el precio tarjeta quedó igual a oferta o es 0, no tiene tarjeta
+                        if precio_tarjeta == precio_oferta:
+                            precio_tarjeta = 0
+                        if precio_tarjeta == 0:
+                            # No forzar, queda sin tarjeta
+                            pass
 
                         if precio_oferta <= 0 or precio_normal <= precio_oferta:
                             continue
 
+                        # Descuento SIEMPRE con precio Hoy / Oferta, no con tarjeta
                         descuento = int(((precio_normal - precio_oferta) / precio_normal) * 100)
 
                         if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
@@ -118,7 +157,7 @@ def extraer_alkosto():
                                 "Nombre": nombre,
                                 "Precio Normal": precio_normal,
                                 "Precio Oferta": precio_oferta,
-                                "Precio Tarjeta": precio_tarjeta,
+                                "Precio Tarjeta": precio_tarjeta if precio_tarjeta > 0 else 0,
                                 "Precio Addi": None,
                                 "Descuento": descuento,
                                 "Enlace": enlace,
@@ -128,16 +167,12 @@ def extraer_alkosto():
                             })
                     except Exception:
                         continue
-
                 print(f"  Categoria lista. Llevamos {len(ofertas)} ofertas en total.")
                 print("  Pausa de 6 segundos...")
                 time.sleep(6)
-
             except Exception as e:
                 print(f"Error en Alkosto ({url}): {e}")
-
         browser.close()
-
     print(f"Alkosto aportó: {len(ofertas)} ofertas reales")
     return ofertas
 
