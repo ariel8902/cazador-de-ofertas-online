@@ -38,9 +38,9 @@ def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
-def extraer_exito_api():
+# Nombre exacto que busca tu orquestador: extraer_exito
+def extraer_exito():
     hallazgos = []
-    # Endpoint directo de la API de catálogo de VTEX para televisores en Éxito
     url = "https://www.exito.com/api/catalog_system/pub/products/search/tecnologia/televisores?_from=0&_to=49&O=OrderByTopSaleDESC"
     
     headers = {
@@ -54,6 +54,7 @@ def extraer_exito_api():
     try:
         response = requests.get(url, headers=headers, timeout=25)
         print(f"[*] Status HTTP recibido: {response.status_code}")
+        print(f"[*] Body inicio: {response.text[:300]}")
 
         if response.status_code == 200:
             productos = response.json()
@@ -111,4 +112,4 @@ def extraer_exito_api():
     return hallazgos
 
 if __name__ == "__main__":
-    extraer_exito_api()
+    extraer_exito()
