@@ -1,18 +1,17 @@
+import os
 import json
-import subprocess
-import sys
 import urllib.parse
-
-# Instalar curl_cffi automáticamente si no está en el entorno de GitHub Actions
-try:
-    from curl_cffi import requests
-except ImportError:
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "-q", "curl_cffi"])
-    from curl_cffi import requests
+import requests
 
 def extraer_exito():
+    api_key = os.getenv("SCRAPERAPI_KEY", "").strip()
+    if not api_key:
+        print("Error: No se encontró la variable de entorno SCRAPERAPI_KEY en el workflow.")
+        return []
+
     base_url = "https://www.exito.com/api/graphql"
     
+    # Consulta puntual de 16 ítems ordenados por mayor descuento
     variables = {
         "first": 16,
         "after": "0",
@@ -32,22 +31,22 @@ def extraer_exito():
     })
     target_url = f"{base_url}?{query_params}"
 
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "es-CO,es;q=0.9",
-        "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc",
-        "Origin": "https://www.exito.com"
+    proxy_params = {
+        "api_key": api_key,
+        "url": target_url,
+        "render": "false",
+        "country_code": "co"
     }
 
-    print("Iniciando consulta puntual a Éxito GraphQL con huella Chrome (curl_cffi)...")
+    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (render=false)...")
     ofertas_validas = []
 
     try:
-        response = requests.get(target_url, headers=headers, impersonate="chrome", timeout=25)
+        response = requests.get("https://api.scraperapi.com", params=proxy_params, timeout=35)
         print(f"Código de estado HTTP: {response.status_code}")
         
         if response.status_code != 200:
-            print("Akamai bloqueó la IP de Azure incluso con huella Chrome. Necesitaremos túnel proxy.")
+            print(f"Detalle respuesta: {response.text[:200]}")
             return []
 
         data = response.json()
@@ -115,3 +114,7 @@ def extraer_exito():
     except Exception as e:
         print(f"Error controlado: {e}")
         return []
+
+if __name__ == "__main__":
+    resultados = extraer_exito()
+    print(json.dumps(resultados, indent=2, ensure_ascii=False))
