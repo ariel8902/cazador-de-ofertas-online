@@ -153,7 +153,6 @@ def obtener_ofertas_en_vivo():
         except Exception:
             datos_crudos = []
 
-    # Filtrar únicamente tarjetas válidas que tengan las llaves oficiales
     if isinstance(datos_crudos, list):
         return [
             item for item in datos_crudos
@@ -222,12 +221,19 @@ if ofertas_para_mostrar:
                 else:
                     st.markdown(f"⚪ **[ {tienda} ]**")
 
-                st.image(item.get("Imagen", "https://via.placeholder.com/200"), use_container_width=True)
+                st.image(item.get("Imagen", "https://via.placeholder.com/200"), width="stretch")
                 st.subheader(item.get("Nombre", "Producto"))
                 
                 st.markdown(f"❌ **Precio Regular:** ~{item.get('Precio Normal')}~")
-                st.markdown(f"💳 **Precio Tarjeta:** **{item.get('Precio Tarjeta', item.get('Precio Oferta'))}**")
-                st.markdown(f"💵 **Otros Medios:** **{item.get('Precio Oferta')}**")
+                
+                precio_tarjeta = item.get("Precio Tarjeta")
+                precio_oferta = item.get("Precio Oferta")
+                if precio_tarjeta and precio_tarjeta != precio_oferta:
+                    st.markdown(f"💳 **Precio Tarjeta:** **{precio_tarjeta}**")
+                    st.markdown(f"💵 **Otros Medios:** **{precio_oferta}**")
+                else:
+                    st.markdown(f"💵 **Precio Oferta:** **{precio_oferta}**")
+                
                 st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
                 
                 if st.link_button(f"🔗 Ver Oferta en {tienda}", item.get("Enlace Directo", "#")):
