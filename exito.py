@@ -182,7 +182,8 @@ def actualizar_base_datos(nuevos_productos):
     print(f"[+] Base de datos actualizada con éxito. Registros Éxito: {len(nuevos_productos)}. Total general en JSON: {len(datos_actualizados)}")
 
 
-def ejecutar_rastreo():
+def extraer_exito():
+    """Función principal requerida por el importador del workflow."""
     headers = obtener_sesion_playwright()
     todos_los_hallazgos = []
 
@@ -202,4 +203,4 @@ def ejecutar_rastreo():
 
 
 if __name__ == "__main__":
-    ejecutar_rastreo()
+    extraer_exito()
