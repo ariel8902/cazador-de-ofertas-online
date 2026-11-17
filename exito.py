@@ -10,7 +10,7 @@ URL_VITRINA = "https://www.exito.com/tecnologia/televisores?orderBy=discount:des
 
 
 def extraer_exito():
-    """Motor de extracción profesional basado en interceptación nativa de red (Bypass Akamai garantizado)."""
+    """Motor de extracción profesional basado en interceptación nativa de red con carga optimizada."""
     print("[*] Iniciando motor profesional con interceptación de red para Éxito...")
     productos_capturados = []
 
@@ -49,15 +49,18 @@ def extraer_exito():
 
         try:
             print(f"[*] Navegando a la vitrina: {URL_VITRINA}")
-            # Carga natural que supera los retos de Akamai y dispara las peticiones legítimas
-            page.goto(URL_VITRINA, timeout=60000, wait_until="networkidle")
-            page.wait_for_timeout(6000)  # Tiempo de estabilización para capturar todos los lotes asíncronos
+            # Se usa domcontentloaded para evitar el timeout por sockets de tracking infinitos
+            page.goto(URL_VITRINA, timeout=60000, wait_until="domcontentloaded")
+            
+            # Esperar a que las tarjetas de productos aparezcan de forma segura en el DOM
+            page.wait_for_selector("article", timeout=20000)
+            page.wait_for_timeout(5000)  # Tiempo de estabilización para capturar todas las respuestas asíncronas
         except Exception as e:
             print(f"[!] Error crítico durante la navegación en el navegador: {str(e)}")
         finally:
             browser.close()
 
-    # Procesamiento y mapeo directo de la información extraída (sin cálculos inventados)
+    # Procesamiento y mapeo directo de la información capturada
     hallazgos = []
     vistos = set()
 
