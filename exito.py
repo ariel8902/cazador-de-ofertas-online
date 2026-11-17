@@ -50,35 +50,56 @@ def _extraer_precios_tarjeta_exito(prod):
     return precio_normal, precio_tarjeta, precio_otros
 
 
+def _descargar_html_exito(url):
+    """Descarga la página vía ScraperAPI (IP Colombia) con reintento automático ante HTTP 500."""
+    payload = {
+        "api_key": SCRAPER_API_KEY,
+        "url": url,
+        "render": "true",
+        "country_code": "co",
+    }
+    for intento in range(2):
+        try:
+            res = requests.get(SCRAPER_API_URL, params=payload, timeout=90)
+            print(f"  -> {url} | HTTP {res.status_code}")
+            if res.status_code == 200:
+                return res.text
+            if res.status_code >= 500 and intento == 0:
+                time.sleep(random.uniform(3.0, 5.0))
+                continue
+            break
+        except Exception as e:
+            print(f"  -> Error conexión ({url}): {e}")
+            if intento == 0:
+                time.sleep(3)
+    return None
+
+
 def extraer_exito():
     print(f"--- [ÉXITO] Rastreando Ofertas Reales Ordenadas por Descuento (>= {MIN_DESCUENTO}%) ---")
-    urls = [
-        "https://www.exito.com/hogar?sort=discount_desc",
-        "https://www.exito.com/electrodomesticos?sort=discount_desc",
-        "https://www.exito.com/tecnologia/televisores?sort=discount_desc",
-        "https://www.exito.com/tecnologia/celulares?sort=discount_desc",
-        "https://www.exito.com/moda-y-accesorios?sort=discount_desc",
-        "https://www.exito.com/deportes-y-tiempo-libre?sort=discount_desc",
+    categorias = [
+        "https://www.exito.com/hogar",
+        "https://www.exito.com/electrodomesticos",
+        "https://www.exito.com/tecnologia/televisores",
+        "https://www.exito.com/tecnologia/celulares",
+        "https://www.exito.com/tecnologia/computadores",
+        "https://www.exito.com/moda-y-accesorios",
+        "https://www.exito.com/deportes",
+        "https://www.exito.com/mercado",
     ]
 
     ofertas = []
     enlaces_vistos = set()
 
-    for url in urls:
-        time.sleep(random.uniform(1.5, 3.0))
-        payload = {
-            "api_key": SCRAPER_API_KEY,
-            "url": url,
-            "render": "true",
-            "country_code": "co",
-        }
-        try:
-            res = requests.get(SCRAPER_API_URL, params=payload, timeout=90)
-            print(f"  -> {url} | HTTP {res.status_code}")
-            if res.status_code != 200:
-                continue
+    for base_url in categorias:
+        for pagina in (1, 2):
+            url = f"{base_url}?order=discount_desc&page={pagina}"
+            time.sleep(random.uniform(1.5, 3.0))
+            html = _descargar_html_exito(url)
+            if not html:
+                break
 
-            soup = BeautifulSoup(res.text, "html.parser")
+            soup = BeautifulSoup(html, "html.parser")
             tarjetas = soup.find_all(["article", "li", "div"], attrs={"data-fs-product-card": True})
             if not tarjetas:
                 tarjetas = soup.find_all(
@@ -89,7 +110,10 @@ def extraer_exito():
                 )
 
             print(f"     Tarjetas detectadas: {len(tarjetas)}")
+            if not tarjetas:
+                break
 
+            nuevas_en_pagina = 0
             for prod in tarjetas:
                 link_elem = prod.find("a", href=lambda h: h and ("/p" in h or "-p" in h))
                 if not link_elem:
@@ -134,6 +158,7 @@ def extraer_exito():
 
                 if MIN_DESCUENTO <= descuento <= MAX_DESCUENTO:
                     enlaces_vistos.add(enlace)
+                    nuevas_en_pagina += 1
                     ofertas.append({
                         "Nombre": nombre,
                         "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
@@ -144,8 +169,10 @@ def extraer_exito():
                         "Imagen": imagen,
                         "Almacen": "Éxito",
                     })
-        except Exception as e:
-            print(f"Error en Éxito ({url}): {e}")
+
+            # Si la página 1 ordenada por descuento no aportó ofertas >= 50%, no gastamos créditos en página 2
+            if nuevas_en_pagina == 0:
+                break
 
     print(f"Éxito aportó: {len(ofertas)} ofertas reales de {MIN_DESCUENTO}%+")
     return ofertas
