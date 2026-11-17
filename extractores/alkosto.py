@@ -67,6 +67,7 @@ def extraer_alkosto():
 
                     precio_normal = precios_num[0]
                     precio_oferta = precios_num[-1]
+                    # En Alkosto, el precio del medio es el de Tarjeta Alkosto
                     precio_tarjeta = precios_num[-2] if len(precios_num) >= 3 else precio_oferta
 
                     if precio_oferta <= 0 or precio_normal <= precio_oferta:
@@ -78,10 +79,13 @@ def extraer_alkosto():
                         enlaces_vistos.add(enlace)
                         ofertas.append({
                             "Nombre": nombre,
-                            "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
-                            "Precio Tarjeta": f"${precio_tarjeta:,.0f}".replace(",", "."),
-                            "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
-                            "Descuento": f"-{descuento}%",
+                            # Guardamos NUMEROS, el $ lo pone app.py con formato_pesos
+                            "Precio Normal": precio_normal,
+                            "Precio Oferta": precio_oferta,
+                            "Precio Tarjeta": precio_tarjeta,
+                            "Precio Addi": None,
+                            "Descuento": descuento,
+                            "Enlace": enlace,
                             "Enlace Directo": enlace,
                             "Imagen": imagen,
                             "Almacen": "Alkosto"
@@ -89,5 +93,8 @@ def extraer_alkosto():
         except Exception as e:
             print(f"Error en Alkosto ({url}): {e}")
 
-    print(f"Alkosto aportó: {len(ofertas)} ofertas reales de 50%+")
+    print(f"Alkosto aportó: {len(ofertas)} ofertas reales")
     return ofertas
+
+if __name__ == "__main__":
+    print(extraer_alkosto()[:2])

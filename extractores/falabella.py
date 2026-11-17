@@ -8,52 +8,58 @@ def limpiar_precio(texto_precio):
     numeros = re.sub(r'[^\d]', '', texto_precio)
     return int(numeros) if numeros else 0
 
-def extraer_ktronix(page, categoria, url_busqueda):
-    print(f"\n[+] 🐝 Doña Abeja rastreando Ktronix - Categoría: {categoria}")
-    page.goto(url_busqueda, timeout=60000, wait_until="domcontentloaded")
-    
-    time.sleep(random.uniform(2.5, 4.0))
-    page.mouse.wheel(0, 500)
+def extraer_falabella(page, categoria, url_busqueda):
+    print(f"\n[+] 🐝 Doña Abeja rastreando Falabella - Categoría: {categoria}")
+    try:
+        page.goto(url_busqueda, timeout=60000, wait_until="domcontentloaded")
+    except Exception as e:
+        print(f"    ⚠️ Advertencia en carga Falabella: {e}")
+        
+    time.sleep(random.uniform(3.5, 5.0))
+    page.mouse.wheel(0, 600)
     time.sleep(1.5)
     
-    productos = page.query_selector_all(".product__item, [class*='product-item']")
-    print(f"    📊 Tarjetas detectadas en Ktronix: {len(productos)}")
+    productos = page.query_selector_all("div[id*='testId-pod'], div[class*='pod-item'], div.search-results-4-grid")
+    print(f"    📊 Tarjetas detectadas en Falabella: {len(productos)}")
     
-    for card in productos[:10]:
-        enlace_element = card.query_selector("a.product__item__top__link, a[href*='/p/']")
-        enlace_producto = None
-        
-        if enlace_element:
-            href = enlace_element.get_attribute("href")
-            if href:
-                href_limpio = href.strip()
-                if href_limpio.startswith("http"):
-                    enlace_producto = href_limpio
-                else:
-                    if not href_limpio.startswith("/"):
-                        href_limpio = "/" + href_limpio
-                    enlace_producto = f"https://www.ktronix.com{href_limpio}"
-
-        if not enlace_producto or "/p/" not in enlace_producto:
+    for card in productos[:12]:
+        enlace_element = card.query_selector("a[href*='/product/']")
+        if not enlace_element:
             continue
-
+            
+        href = enlace_element.get_attribute("href")
+        if not href:
+            continue
+            
+        # Saneamiento quirúrgico definitivo: Extraer hasta el primer bloque limpio del producto (/falabella-co/product/ID/nombre)
+        href_limpio = href.strip().split('?')[0]
+        match = re.search(r'(/falabella-co/product/\d+/[^/?]+)', href_limpio)
+        if match:
+            enlace_producto = f"https://www.falabella.com.co{match.group(1)}"
+        else:
+            match_base = re.search(r'(/falabella-co/product/\d+)', href_limpio)
+            if match_base:
+                enlace_producto = f"https://www.falabella.com.co{match_base.group(1)}"
+            else:
+                enlace_producto = f"https://www.falabella.com.co{href_limpio}"
+            
         texto = card.inner_text().split('\n')
         lineas = [l.strip() for l in texto if l.strip()]
         
         nombre = None
         for linea in lineas:
-            if not '$' in linea and len(linea) > 15 and not any(k in linea.lower() for k in ['envío', 'garantía', 'seguro', 'cuota']):
+            if not '$' in linea and len(linea) > 12 and not any(k in linea.lower() for k in ['envío', 'agregar', 'patrocinado', 'por ']):
                 nombre = linea
                 break
-        
+                
         if not nombre:
             continue
-        
+            
         precios_raw = [l for l in lineas if '$' in l]
         precios_num = [limpiar_precio(p) for p in precios_raw if limpiar_precio(p) > 0]
         precios_unicos = list(dict.fromkeys(precios_num))
         
-        if not precios_unicos:
+        if len(precios_unicos) < 2:
             continue
             
         precio_max = max(precios_unicos)
@@ -68,11 +74,11 @@ def extraer_ktronix(page, categoria, url_busqueda):
                 descuento_general = ((precio_alto - precio_oferta_general) / precio_alto) * 100
                 
                 if descuento_general >= config.UMBRAL_DESCUENTO_MINIMO:
-                    print(f"    🔥 ¡DESFASE KTRONIX! {nombre[:45]}")
+                    print(f"    🔥 ¡DESFASE FALABELLA! {nombre[:45]} -> URL LIMPIA: {enlace_producto}")
                     enviar_alerta_telegram(
                         config.TELEGRAM_BOT_TOKEN,
                         config.TELEGRAM_CHAT_ID,
-                        "Ktronix",
+                        "Falabella",
                         categoria,
                         f"{nombre} (💳 Con Tarjeta Tienda: ${precio_tarjeta:,})",
                         precio_alto,
@@ -85,11 +91,11 @@ def extraer_ktronix(page, categoria, url_busqueda):
                 descuento = ((precio_alto - precio_bajo) / precio_alto) * 100
                 
                 if descuento >= config.UMBRAL_DESCUENTO_MINIMO:
-                    print(f"    🔥 ¡DESFASE KTRONIX! {nombre[:45]}")
+                    print(f"    🔥 ¡DESFASE FALABELLA! {nombre[:45]} -> URL LIMPIA: {enlace_producto}")
                     enviar_alerta_telegram(
                         config.TELEGRAM_BOT_TOKEN,
                         config.TELEGRAM_CHAT_ID,
-                        "Ktronix",
+                        "Falabella",
                         categoria,
                         nombre,
                         precio_alto,
