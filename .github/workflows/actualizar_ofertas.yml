@@ -35,24 +35,13 @@ jobs:
           from exito import extraer_exito
 
           archivo_datos = 'ofertas.json'
-          ofertas_actuales = []
-
-          if os.path.exists(archivo_datos):
-              try:
-                  with open(archivo_datos, 'r', encoding='utf-8') as f:
-                      ofertas_actuales = json.load(f)
-              except Exception:
-                  ofertas_actuales = []
-
-          otras_tiendas = [o for o in ofertas_actuales if o.get('Almacen') != 'Éxito']
           nuevas_exito = extraer_exito()
 
-          total_ofertas = otras_tiendas + nuevas_exito
-
+          # Sobrescribir limpiamente para que no arrastre basura ni datos estáticos de otras tiendas
           with open(archivo_datos, 'w', encoding='utf-8') as f:
-              json.dump(total_ofertas, f, indent=2, ensure_ascii=False)
+              json.dump(nuevas_exito, f, indent=2, ensure_ascii=False)
 
-          print(f'Total ofertas guardadas: {len(total_ofertas)} (Nuevas de exito: {len(nuevas_exito)})')
+          print(f'Total ofertas guardadas en vitrina (Éxito): {len(nuevas_exito)}')
           "
 
       - name: Guardar Cambios en GitHub
