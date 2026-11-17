@@ -7,7 +7,7 @@ JSON_FILE = "ofertas.json"
 
 def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
     if not nuevos_productos:
-        print(f"[!] ALERTA: 0 hallazgos para {almacen_nombre}. Se aborta la actualización.")
+        print(f"[!] ALERTA: 0 hallazgos para {almacen_nombre}. Se aborta la actualización para no corromper la base de datos.")
         return
 
     if os.path.exists(JSON_FILE):
@@ -22,6 +22,7 @@ def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
             with open(JSON_FILE, "r", encoding="utf-8") as f:
                 datos_existentes = json.load(f)
         except json.JSONDecodeError:
+            print("[!] El archivo ofertas.json está corrupto o vacío. Se inicializará uno nuevo.")
             datos_existentes = []
 
     datos_filtrados = [item for item in datos_existentes if item.get("Almacen") != almacen_nombre]
@@ -32,17 +33,16 @@ def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
         with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(datos_actualizados, f, ensure_ascii=False, indent=4)
         os.replace(temp_file, JSON_FILE)
-        print(f"[+] Base de datos actualizada con éxito. Total registros: {len(datos_actualizados)}")
+        print(f"[+] Base de datos actualizada de forma atómica. Total registros en vitrina: {len(datos_actualizados)}")
     except Exception as e:
-        print(f"[!] Error escribiendo la base de datos: {e}")
+        print(f"[!] Error escribiendo la base de datos atómica: {e}")
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
-# Nombre exacto que busca tu orquestador: extraer_exito
 def extraer_exito():
     hallazgos = []
-    url = "https://www.exito.com/api/catalog_system/pub/products/search/tecnologia/televisores?_from=0&_to=49&O=OrderByTopSaleDESC"
-    
+    vistos = set()
+
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
         "Accept": "application/json",
@@ -50,15 +50,27 @@ def extraer_exito():
         "Accept-Language": "es-CO,es;q=0.9"
     }
 
-    print("[*] Consultando la API directa de VTEX para Éxito...")
-    try:
-        response = requests.get(url, headers=headers, timeout=25)
-        print(f"[*] Status HTTP recibido: {response.status_code}")
-        print(f"[*] Body inicio: {response.text[:300]}")
+    print("[*] Consultando API directa VTEX para Éxito con paginación y IP residencial...")
 
-        if response.status_code == 200:
+    # Paginación de 50 en 50 hasta 500 productos, ordenados por mayor descuento
+    for _from in range(0, 500, 50):
+        _to = _from + 49
+        url = f"https://www.exito.com/api/catalog_system/pub/products/search/tecnologia/televisores?_from={_from}&_to={_to}&O=OrderByBestDiscountDESC"
+
+        try:
+            response = requests.get(url, headers=headers, timeout=25)
+            print(f"[*] Página {_from}-{_to} -> Status HTTP: {response.status_code}")
+
+            if response.status_code != 200:
+                print(f"[!] Bloqueo o error HTTP: {response.status_code} - Body: {response.text[:200]}")
+                break
+
             productos = response.json()
-            print(f"[*] Productos obtenidos de la API: {len(productos)}")
+            print(f"[*] Productos obtenidos en esta página: {len(productos)}")
+
+            if not productos:
+                print("[*] Fin de la vitrina, no hay más productos.")
+                break
 
             for prod in productos:
                 name = prod.get("productName")
@@ -66,6 +78,10 @@ def extraer_exito():
                 if not link_text:
                     continue
                 link = f"https://www.exito.com/{link_text}/p"
+
+                if link in vistos:
+                    continue
+                vistos.add(link)
 
                 items = prod.get("items", [])
                 if not items:
@@ -101,13 +117,15 @@ def extraer_exito():
                         "Imagen": imagen_url,
                         "Enlace Directo": link
                     })
-        else:
-            print(f"[!] La API directa devolvió un código de bloqueo o error: {response.status_code}")
 
-    except Exception as e:
-        print(f"[!] Error ejecutando la petición HTTP a la API: {e}")
+            if len(productos) < 50:
+                break
 
-    print(f"[+] Total de registros limpios procesados por API: {len(hallazgos)}")
+        except Exception as e:
+            print(f"[!] Error ejecutando petición en página {_from}: {e}")
+            break
+
+    print(f"[+] Total de registros limpios procesados para Éxito: {len(hallazgos)}")
     actualizar_base_datos(hallazgos, almacen_nombre="Éxito")
     return hallazgos
 
