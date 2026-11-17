@@ -2,6 +2,9 @@ import json
 import urllib.parse
 from playwright.sync_api import sync_playwright
 
+def formatear_pesos(valor):
+    return f"${int(round(valor)):,}".replace(",", ".")
+
 def extraer_exito():
     print("Iniciando navegador real (Chromium) para obtener sesión válida en Éxito...")
     ofertas_validas = []
@@ -44,11 +47,9 @@ def extraer_exito():
             context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
             page = context.new_page()
 
-            # 1. Cargar la página real para que el JS de Akamai genere las cookies de sesión
             page.goto("https://www.exito.com/tecnologia/celulares?order=discount_desc", wait_until="domcontentloaded", timeout=45000)
             page.wait_for_timeout(6000)
 
-            # 2. Ejecutar la consulta GraphQL desde dentro del navegador autenticado
             resultado = page.evaluate(
                 """async (url) => {
                     const resp = await fetch(url, {
@@ -77,10 +78,10 @@ def extraer_exito():
             node = edge.get("node", {})
             nombre = node.get("name", "Sin nombre")
             slug = node.get("slug", "")
-            url_producto = f"https://www.exito.com/{slug}/p" if slug else ""
+            url_producto = f"https://www.exito.com/{slug}/p" if slug else "#"
 
             imagenes = node.get("image", [])
-            imagen_url = imagenes[0].get("url", "") if imagenes else ""
+            imagen_url = imagenes[0].get("url", "https://via.placeholder.com/200") if imagenes else "https://via.placeholder.com/200"
 
             offers = node.get("offers", {}).get("offers", [])
             oferta_activa = next((o for o in offers if o.get("quantity", 0) > 0), None)
@@ -95,7 +96,6 @@ def extraer_exito():
                 continue
 
             precio_tarjeta = precio_oferta
-            medio_pago_especial = None
 
             for seller in node.get("sellers", []):
                 offer = seller.get("commertialOffer", {})
@@ -109,23 +109,20 @@ def extraer_exito():
                                     precio_calculado = precio_lista - descuento_tabla
                                     if 0 < precio_calculado < precio_tarjeta:
                                         precio_tarjeta = precio_calculado
-                                        medio_pago_especial = "Tarjeta Éxito / Aliados"
 
             mejor_precio = min(precio_oferta, precio_tarjeta)
             porcentaje_descuento = round((1 - (mejor_precio / precio_lista)) * 100)
 
             if porcentaje_descuento >= 50:
                 ofertas_validas.append({
-                    "tienda": "Éxito",
-                    "titulo": nombre,
-                    "imagen": imagen_url,
-                    "url": url_producto,
-                    "precio_tachado": int(precio_lista),
-                    "precio_general": int(precio_oferta),
-                    "precio_tarjeta": int(precio_tarjeta) if medio_pago_especial else None,
-                    "medio_pago": medio_pago_especial,
-                    "descuento_pct": porcentaje_descuento,
-                    "es_marketplace": node.get("productType", {}).get("isMkp", True)
+                    "Almacen": "Éxito",
+                    "Nombre": nombre,
+                    "Imagen": imagen_url,
+                    "Precio Normal": formatear_pesos(precio_lista),
+                    "Precio Tarjeta": formatear_pesos(precio_tarjeta),
+                    "Precio Oferta": formatear_pesos(precio_oferta),
+                    "Descuento": f"{porcentaje_descuento}% OFF",
+                    "Enlace Directo": url_producto
                 })
 
         print(f"Ofertas >= 50% filtradas: {len(ofertas_validas)}")
