@@ -233,5 +233,135 @@
     "medio_pago": null,
     "descuento_pct": 80,
     "es_marketplace": true
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor HISENSE 43 pulgadas QLED Fhd Smart TV 43Q4SV",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37217363/Televisor-HISENSE-43-pulgadas-QLED-Fhd-Smart-TV-43Q4SV-3810784_a.jpg?v=639301962773800000",
+    "Precio Normal": "$1.499.900",
+    "Precio Tarjeta": "$334.900",
+    "Precio Oferta": "$789.899",
+    "Descuento": "78% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-43-pulgadas-qled-fhd-smart-tv-43q4sv-3242627-3810784/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor CAIXUN 50 pulgadas QLED Uhd4K Smart TV C50KAUGQ",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36222855/Televisor-CAIXUN-50-pulgadas-QLED-Uhd-4K-Smart-TV-C65VAUGQ-3851374_a.jpg?v=639271604343830000",
+    "Precio Normal": "$3.699.900",
+    "Precio Tarjeta": "$1.014.900",
+    "Precio Oferta": "$1.199.900",
+    "Descuento": "73% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-50-pulgadas-qled-uhd-4k-smart-tv-c65vaugq-3253335-3851374/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor Samsung 50 Pulgadas Led Uhd4k Smart Tv Un50u8000fkxzl",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36969009/televisor-samsung-50-pulgadas-led-uhd4k-smart-tv-un50u8000fkxzl.jpg?v=639295974947900000",
+    "Precio Normal": "$2.090.900",
+    "Precio Tarjeta": "$655.900",
+    "Precio Oferta": "$1.425.499",
+    "Descuento": "69% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-50-pulgadas-led-uhd-4k-smart-tv-un50u8000fkxzl-3209289-3688426/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor CAIXUN 55 pulgadas QLED Uhd4K Smart TV C55KAUGQ",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36224853/Televisor-CAIXUN-55-pulgadas-QLED-Uhd-4K-Smart-TV-C55KAUGQ-3857626_a.jpg?v=639271625705300000",
+    "Precio Normal": "$3.999.900",
+    "Precio Tarjeta": "$1.229.900",
+    "Precio Oferta": "$1.349.900",
+    "Descuento": "69% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-caixun-55-pulgadas-qled-uhd-4k-smart-tv-c55kaugq-3255839-3857626/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor Tcl 50 Pulgadas Qled Fhd Smart Tv 50S5k",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36612185/televisor-tcl-50-pulgadas-qled-fhd-smart-tv-50s5k.jpg?v=639283871260170000",
+    "Precio Normal": "$1.900.000",
+    "Precio Tarjeta": "$675.000",
+    "Precio Oferta": "$1.179.900",
+    "Descuento": "64% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-tcl-50-pulgadas-qled-fhd-smart-tv-50s5k-3234406-3785484/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor HISENSE 58 pulgadas LED Uhd4K Smart TV 58A6NV",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37163994/Televisor-HISENSE-58-pulgadas-LED-Uhd-4K-Smart-TV-58A6NV-3685429_a.jpg?v=639300895780470000",
+    "Precio Normal": "$3.599.900",
+    "Precio Tarjeta": "$1.299.900",
+    "Precio Oferta": "$1.499.900",
+    "Descuento": "64% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-58-pulgadas-led-uhd-4k-smart-tv-58a6nv-3208349-3685429/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor SAMSUNG 40 pulgadas QLED Fhd Smart TV QN40Q5FAAKXZL",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37150450/Televisor-SAMSUNG-40-pulgadas-QLED-Fhd-Smart-TV-QN40Q5FAAKXZL-3784225_a.jpg?v=639300255033730000",
+    "Precio Normal": "$1.999.999",
+    "Precio Tarjeta": null,
+    "Precio Oferta": "$802.500",
+    "Descuento": "60% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-40-pulgadas-qled-fhd-smart-tv-qn40q5faakxzl-3234007-3784225/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor HISENSE 50 pulgadas QLED Fhd Smart TV 50Q4SV",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37164114/Televisor-HISENSE-50-pulgadas-QLED-Fhd-Smart-TV-50Q4SV-3810785_a.jpg?v=639300896410270000",
+    "Precio Normal": "$2.299.900",
+    "Precio Tarjeta": "$984.900",
+    "Precio Oferta": "$1.099.900",
+    "Descuento": "57% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-hisense-50-pulgadas-qled-fhd-smart-tv-50q4sv-3242628-3810785/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor LG 65 pulgadas QNED Uhd4K Smart TV 65QNED65BSA",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37150124/Televisor-LG-65-pulgadas-QNED-Uhd-4K-Smart-TV-65QNED65BSA-3886914_a.jpg?v=639300253247570000",
+    "Precio Normal": "$4.999.900",
+    "Precio Tarjeta": "$2.349.900",
+    "Precio Oferta": "$2.599.900",
+    "Descuento": "53% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-lg-65-pulgadas-qned-uhd-4k-smart-tv-65qned65bsa-3263498-3886914/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor SAMSUNG 58 pulgadas LED Uhd4K Smart TV UN58U8000HKXZL",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37150100/Televisor-SAMSUNG-58-pulgadas-LED-Uhd-4K-Smart-TV-UN58U8000HKXZL-3856068_a.jpg?v=639300253105370000",
+    "Precio Normal": "$3.339.900",
+    "Precio Tarjeta": "$1.582.900",
+    "Precio Oferta": "$1.749.900",
+    "Descuento": "53% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-samsung-58-pulgadas-led-uhd-4k-smart-tv-un58u8000hkxzl-3254967-3856068/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor LG 70 pulgadas LED Uhd4K Smart TV 70NU850BPSD NANO",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/37150116/Televisor-LG-70-pulgadas-LED-Uhd-4K-Smart-TV-70NU850BPSD-3886913_a.jpg?v=639300253197300000",
+    "Precio Normal": "$4.499.900",
+    "Precio Tarjeta": "$2.169.300",
+    "Precio Oferta": "$2.449.900",
+    "Descuento": "52% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-lg-70-pulgadas-led-uhd-4k-smart-tv-70nu850bpsd-3263497-3886913/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisión SAMSUNG 70 pulgadas LED Uhd4K Smart TV UN70U8000HKXZL",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/35502557/Television-SAMSUNG-70-pulgadas-LED-Uhd-4K-Smart-TV-UN70U8000HKXZL-3861218_a.jpg?v=639263000877770000",
+    "Precio Normal": "$4.499.900",
+    "Precio Tarjeta": "$2.174.900",
+    "Precio Oferta": "$2.499.900",
+    "Descuento": "52% OFF",
+    "Enlace Directo": "https://www.exito.com/television-samsung-70-pulgadas-led-uhd-4k-smart-tv-un70u8000hkxzl-3256793-3861218/p"
+  },
+  {
+    "Almacen": "Éxito",
+    "Nombre": "Televisor LG 75 pulgadas QNED Uhd4K Smart TV 75QNED74BSA",
+    "Imagen": "https://exitocol.vtexassets.com/arquivos/ids/36229059/Televisor-LG-75-pulgadas-QNED-Uhd-4K-Smart-TV-75QNED74BSA-3897909_a.jpg?v=639271646103730000",
+    "Precio Normal": "$6.299.900",
+    "Precio Tarjeta": "$3.169.500",
+    "Precio Oferta": "$3.299.900",
+    "Descuento": "50% OFF",
+    "Enlace Directo": "https://www.exito.com/televisor-lg-75-pulgadas-qned-uhd-4k-smart-tv-75qned74bsa-3266510-3897909/p"
   }
 ]
