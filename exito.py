@@ -6,16 +6,10 @@ from playwright.sync_api import sync_playwright
 JSON_FILE = "ofertas.json"
 
 def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
-    """
-    Actualiza la base de datos central en ofertas.json de forma segura,
-    aplicando escritura atómica (.tmp + os.replace), respaldo .bak,
-    y preservando los registros de las demás tiendas.
-    """
     if not nuevos_productos:
         print(f"[!] ALERTA: 0 hallazgos para {almacen_nombre}. Se aborta la actualización para no corromper la base de datos.")
         return
 
-    # 1. Crear backup preventivo antes de tocar el archivo
     if os.path.exists(JSON_FILE):
         try:
             shutil.copy(JSON_FILE, JSON_FILE + ".bak")
@@ -31,21 +25,17 @@ def actualizar_base_datos(nuevos_productos, almacen_nombre="Éxito"):
             print("[!] El archivo ofertas.json está corrupto o vacío. Se inicializará uno nuevo.")
             datos_existentes = []
 
-    # Filtrar removiendo únicamente la tienda que se va a actualizar
     datos_filtrados = [item for item in datos_existentes if item.get("Almacen") != almacen_nombre]
-    
-    # Combinar los datos limpios anteriores con los nuevos hallazgos
     datos_actualizados = datos_filtrados + nuevos_productos
 
-    # 2. Escritura atómica para evitar corrupción si el runner se cae a mitad de escritura
     temp_file = JSON_FILE + ".tmp"
     try:
         with open(temp_file, "w", encoding="utf-8") as f:
             json.dump(datos_actualizados, f, ensure_ascii=False, indent=4)
         os.replace(temp_file, JSON_FILE)
-        print(f"[+] Base de datos actualizada de forma atómica. Total registros en vitrina: {len(datos_actualizados)}")
+        print(f"[+] Base de datos actualizada de forma atómica. Total registros: {len(datos_actualizados)}")
     except Exception as e:
-        print(f"[!] Error crítico escribiendo la base de datos atómica: {e}")
+        print(f"[!] Error escribiendo la base de datos: {e}")
         if os.path.exists(temp_file):
             os.remove(temp_file)
 
@@ -72,79 +62,79 @@ def extraer_exito():
         page = context.new_page()
 
         def interceptar_respuesta(response):
+            # DIAGNOSTICO: Loguea TODAS las respuestas para ver qué está pasando por la red
+            print(f"[DEBUG] {response.status} - {response.url[:200]}")
             try:
                 if "/api/graphql" in response.url and response.status == 200:
                     data = response.json()
-                    data_prod = data.get("data", {}).get("productSearch", {}).get("products", [])
-                    
-                    if not data_prod:
-                        return
+                    print(f"[DEBUG GRAPHQL KEYS]: {list(data.keys())}")
+                    if "data" in data and data["data"]:
+                        print(f"[DEBUG DATA KEYS]: {list(data['data'].keys())}")
+                        data_prod = data.get("data", {}).get("productSearch", {}).get("products", [])
+                        if not data_prod:
+                            print("[DEBUG] productSearch vino vacío o no existe en este bloque.")
+                            return
 
-                    for prod in data_prod:
-                        link_text = prod.get("linkText", "")
-                        if not link_text:
-                            continue
-                        link = f"https://www.exito.com/{link_text}/p"
-                        
-                        if link in vistos:
-                            continue
-                        vistos.add(link)
+                        for prod in data_prod:
+                            link_text = prod.get("linkText", "")
+                            if not link_text:
+                                continue
+                            link = f"https://www.exito.com/{link_text}/p"
+                            
+                            if link in vistos:
+                                continue
+                            vistos.add(link)
 
-                        name = prod.get("productName")
-                        items = prod.get("items", [])
-                        if not items:
-                            continue
-                        
-                        # 3. Selección de seller en 2 pasos estrictos (Prioridad Seller ID 1 = Éxito directo)
-                        sellers = items[0].get("sellers", [])
-                        seller_encontrado = next((s for s in sellers if s.get("sellerId") == "1"), None)
-                        
-                        if not seller_encontrado and sellers:
-                            seller_encontrado = sellers[0]
-                            # Log opcional para auditoría de marketplace
-                            # print(f"[!] Sin seller principal para {name}, usando: {seller_encontrado.get('sellerName')}")
-                        elif not seller_encontrado:
-                            seller_encontrado = {}
+                            name = prod.get("productName")
+                            items = prod.get("items", [])
+                            if not items:
+                                continue
+                            
+                            sellers = items[0].get("sellers", [])
+                            seller_encontrado = next((s for s in sellers if s.get("sellerId") == "1"), None)
+                            if not seller_encontrado and sellers:
+                                seller_encontrado = sellers[0]
+                            elif not seller_encontrado:
+                                seller_encontrado = {}
 
-                        offer = seller_encontrado.get("commercialOffer", {})
-                        precio = offer.get("Price")
-                        precio_lista = offer.get("ListPrice")
+                            offer = seller_encontrado.get("commercialOffer", {})
+                            precio = offer.get("Price")
+                            precio_lista = offer.get("ListPrice")
 
-                        images = items[0].get("images", [])
-                        imagen_url = images[0].get("imageUrl") if images else ""
+                            images = items[0].get("images", [])
+                            imagen_url = images[0].get("imageUrl") if images else ""
 
-                        if precio and precio > 0:
-                            descuento = ""
-                            if precio_lista and precio_lista > precio:
-                                desc_val = int(round((1 - (precio / precio_lista)) * 100))
-                                descuento = f"{desc_val}%"
+                            if precio and precio > 0:
+                                descuento = ""
+                                if precio_lista and precio_lista > precio:
+                                    desc_val = int(round((1 - (precio / precio_lista)) * 100))
+                                    descuento = f"{desc_val}%"
 
-                            # 4. Esquema unificado 10/10 (incluyendo Precio Tarjeta y formato numérico consistente)
-                            hallazgos.append({
-                                "Almacen": "Éxito",
-                                "Nombre": name,
-                                "Precio Normal": precio_lista if precio_lista else precio,
-                                "Precio Oferta": precio,
-                                "Precio Tarjeta": None,
-                                "Descuento": descuento,
-                                "Imagen": imagen_url,
-                                "Enlace Directo": link
-                            })
+                                hallazgos.append({
+                                    "Almacen": "Éxito",
+                                    "Nombre": name,
+                                    "Precio Normal": precio_lista if precio_lista else precio,
+                                    "Precio Oferta": precio,
+                                    "Precio Tarjeta": None,
+                                    "Descuento": descuento,
+                                    "Imagen": imagen_url,
+                                    "Enlace Directo": link
+                                })
             except Exception as e:
-                print(f"[!] Error parseando GraphQL: {e} - URL: {response.url[:100]}")
+                print(f"[DEBUG] Error parseando respuesta: {e}")
 
         page.on("response", interceptar_respuesta)
 
-        print("[*] Iniciando motor definitivo 10/10 blindado con interceptación de red para Éxito...")
+        print("[*] Iniciando motor con diagnóstico de rayos X para Éxito...")
         try:
             page.goto(url, wait_until="domcontentloaded", timeout=30000)
             
             try:
                 page.wait_for_selector("article", timeout=20000)
             except Exception:
-                print("[!] Advertencia: Selector 'article' tardó en aparecer, procediendo con la data interceptada...")
+                print("[!] Advertencia: Selector 'article' tardó en aparecer...")
 
-            # Scroll dinámico inteligente hasta el fondo
+            # Scroll dinámico
             last_height = page.evaluate("document.body.scrollHeight")
             for _ in range(6):
                 page.evaluate("window.scrollTo(0, document.body.scrollHeight);")
@@ -154,13 +144,33 @@ def extraer_exito():
                     break
                 last_height = new_height
 
-            # 5. Espera de seguridad post-scroll para capturar ráfagas lentas de GraphQL
-            print("[*] Finalizado el scroll, esperando ráfagas pendientes de GraphQL...")
+            print("[*] Esperando ráfagas pendientes de GraphQL...")
             page.wait_for_timeout(5000)
 
         except Exception as e:
-            print(f"[!] Error crítico durante la navegación en el navegador: {e}")
+            print(f"[!] Error crítico durante la navegación: {e}")
         finally:
+            # EVIDENCIA FINAL ANTES DE CERRAR
+            print("[*] ===== EVIDENCIA FINAL =====")
+            print(f"[*] Título de la página: {page.title()}")
+            print(f"[*] URL final: {page.url}")
+            try:
+                page.screenshot(path="debug_exito.png")
+                print("[*] Screenshot guardado como debug_exito.png")
+            except Exception as e:
+                print(f"[!] No se pudo guardar screenshot: {e}")
+
+            try:
+                html = page.content()
+                print(f"[*] Tamaño del HTML obtenido: {len(html)} caracteres")
+                with open("debug_exito.html", "w", encoding="utf-8") as f:
+                    f.write(html)
+                for palabra in ["captcha", "Akamai", "Access Denied", "Verifica", "robot", "blocked", "cloudflare"]:
+                    if palabra.lower() in html.lower():
+                        print(f"[!] ¡ALERTA! Encontrado en HTML: {palabra}")
+            except Exception as e:
+                print(f"[!] No se pudo guardar HTML: {e}")
+
             browser.close()
 
     print(f"[+] Total de registros limpios procesados para Éxito: {len(hallazgos)}")
