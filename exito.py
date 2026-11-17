@@ -6,27 +6,9 @@ from playwright.sync_api import sync_playwright
 # Archivo de base de datos central multitienda
 JSON_FILE = "ofertas.json"
 
-# Categorías clave en Éxito estructuradas para barrido controlado por lotes
-CATEGORIAS_OBJETIVO = [
-    {
-        "nombre": "Tecnología y Pantallas",
-        "query_args": "category-2/tecnologia/televisores",
-    },
-    {
-        "nombre": "Línea Blanca",
-        "query_args": "category-2/electrodomesticos/linea-blanca",
-    },
-    {
-        "nombre": "Electrodomésticos Menores",
-        "query_args": "category-2/electrodomesticos/electrodomesticos-menores",
-    },
-    {
-        "nombre": "Hogar y Muebles",
-        "query_args": "category-2/muebles-y-colchones",
-    },
-]
+# Endpoint base de Éxito con ordenamiento estricto por mayor descuento
+URL_LIQUIDACION = "https://www.exito.com/?orderBy=discount:desc"
 
-# Definición limpia de la consulta GraphQL fuera de bloques complejos de JS
 GRAPHQL_QUERY = """
 query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
   productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
@@ -53,98 +35,114 @@ query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy
 }
 """
 
+def extraer_exito():
+    """Ejecuta el rastreo profesional en Éxito utilizando la sesión viva de Playwright para extraer liquidaciones reales."""
+    print("[*] Iniciando motor de extracción profesional para Éxito...")
+    todos_los_hallazgos = []
 
-def consultar_via_navegador(page, categoria_path):
-    """Navega a la categoría usando el navegador y ejecuta el fetch usando la sesión viva."""
-    url = f"https://www.exito.com/{categoria_path}"
-    try:
-        page.goto(url, timeout=60000)
-        page.wait_for_timeout(4000)
-        
-        productos = page.evaluate("""([catPath, queryStr]) => {
-            return fetch('/api/graphql?operationName=SearchQuery', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json'
-                },
-                body: JSON.stringify({
-                    operationName: "SearchQuery",
-                    variables: {
-                        fullText: "",
-                        selectedFacets: [{key: "c", value: catPath}],
-                        orderBy: "discount:desc",
-                        from: 0,
-                        to: 24
+    with sync_playwright() as p:
+        browser = p.chromium.launch(
+            headless=True,
+            args=["--disable-blink-features=AutomationControlled", "--no-sandbox"]
+        )
+        context = browser.new_context(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            locale="es-CO",
+            viewport={"width": 1920, "height": 1080}
+        )
+        page = context.new_page()
+
+        try:
+            print(f"[*] Accediendo al portal principal para inicializar WAF y cookies...")
+            page.goto(URL_LIQUIDACION, timeout=60000)
+            page.wait_for_timeout(6000)
+
+            print("[*] Consultando API GraphQL de liquidaciones generales...")
+            productos_brutos = page.evaluate("""async (queryStr) => {
+                const response = await fetch('/api/graphql?operationName=SearchQuery', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     },
-                    query: queryStr
-                })
-            })
-            .then(res => res.json())
-            .then(json => json.data && json.data.productSearch && json.data.productSearch.products ? json.data.productSearch.products : [])
-            .catch(() => []);
-        }""", [categoria_path, GRAPHQL_QUERY])
-        
-        return productos if isinstance(productos, list) else []
-    except Exception as e:
-        print(f"[!] Error al consultar la categoría {categoria_path}: {str(e)}")
-        return []
+                    body: JSON.stringify({
+                        operationName: "SearchQuery",
+                        variables: {
+                            fullText: "",
+                            selectedFacets: [],
+                            orderBy: "discount:desc",
+                            from: 0,
+                            to: 50
+                        },
+                        query: queryStr
+                    })
+                });
+                
+                if (!response.ok) return [];
+                const json = await response.json();
+                return json.data?.productSearch?.products || [];
+            }""", GRAPHQL_QUERY)
 
+            if isinstance(productos_brutos, list) and productos_brutos:
+                print(f"[+] Se obtuvieron {len(productos_brutos)} productos crudos de la API.")
+                
+                for p in productos_brutos:
+                    nombre = p.get("productName", "")
+                    link_text = p.get("linkText", "")
+                    enlace = f"https://www.exito.com/{link_text}/p" if link_text else "https://www.exito.com"
 
-def procesar_y_filtrar_productos(productos_brutos):
-    """Aplica el filtro estricto de venta directa, precios reales y descuento >= 50%."""
-    productos_procesados = []
-    if not isinstance(productos_brutos, list):
-        return productos_procesados
+                    items = p.get("items", [])
+                    if not items:
+                        continue
 
-    for p in productos_brutos:
-        nombre = p.get("productName", "")
-        link_text = p.get("linkText", "")
-        enlace = f"https://www.exito.com/{link_text}/p" if link_text else "https://www.exito.com"
+                    item = items[0]
+                    images = item.get("images", [])
+                    imagen = images[0].get("imageUrl", "") if images else ""
 
-        items = p.get("items", [])
-        if not items:
-            continue
+                    sellers = item.get("sellers", [])
+                    # Filtrar exclusivamente venta directa de Éxito (sellerId == '1')
+                    seller_directo = next((s for s in sellers if s.get("sellerId") == "1"), None)
+                    if not seller_directo:
+                        continue
 
-        item = items[0]
-        images = item.get("images", [])
-        imagen = images[0].get("imageUrl", "") if images else ""
+                    offer = seller_directo.get("commercialOffer", {})
+                    precio_oferta = offer.get("Price", 0)
+                    precio_normal = offer.get("ListPrice", 0)
 
-        sellers = item.get("sellers", [])
-        # Filtrar exclusivamente venta directa de Éxito (sellerId == '1') y descartar Marketplace
-        seller_directo = next((s for s in sellers if s.get("sellerId") == "1"), None)
-        if not seller_directo:
-            continue
+                    if precio_normal <= 0 or precio_oferta >= precio_normal:
+                        continue
 
-        offer = seller_directo.get("commercialOffer", {})
-        precio_oferta = offer.get("Price", 0)
-        precio_normal = offer.get("ListPrice", 0)
+                    porcentaje_desc = int(((precio_normal - precio_oferta) / precio_normal) * 100)
 
-        if precio_normal <= 0 or precio_oferta >= precio_normal:
-            continue
+                    # Regla estricta: Descuento real obligatorio >= 50%
+                    if porcentaje_desc >= 50:
+                        todos_los_hallazgos.append(
+                            {
+                                "Almacen": "Éxito",
+                                "Nombre": nombre,
+                                "Imagen": imagen,
+                                "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
+                                "Precio Tarjeta": None,
+                                "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
+                                "Descuento": f"{porcentaje_desc}% OFF",
+                                "Enlace Directo": enlace,
+                            }
+                        )
+            else:
+                print("[!] La API no retornó productos en la búsqueda general.")
 
-        porcentaje_desc = int(((precio_normal - precio_oferta) / precio_normal) * 100)
+        except Exception as e:
+            print(f"[!] Error crítico durante la ejecución del scraper: {str(e)}")
+        finally:
+            browser.close()
 
-        # Regla estricta: Descuento real obligatorio >= 50%
-        if porcentaje_desc >= 50:
-            productos_procesados.append(
-                {
-                    "Almacen": "Éxito",
-                    "Nombre": nombre,
-                    "Imagen": imagen,
-                    "Precio Normal": f"${precio_normal:,.0f}".replace(",", "."),
-                    "Precio Tarjeta": None,
-                    "Precio Oferta": f"${precio_oferta:,.0f}".replace(",", "."),
-                    "Descuento": f"{porcentaje_desc}% OFF",
-                    "Enlace Directo": enlace,
-                }
-            )
-
-    return productos_procesados
+    # Actualización segura de la base de datos central multitienda
+    actualizar_base_datos(todos_los_hallazgos)
+    return todos_los_hallazgos
 
 
 def actualizar_base_datos(nuevos_productos):
-    """Actualiza de forma abierta y multitienda el archivo ofertas.json sin corromper otras tiendas."""
+    """Actualiza de forma abierta y multitienda el archivo ofertas.json preservando las demás tiendas."""
     datos_existentes = []
 
     if os.path.exists(JSON_FILE):
@@ -152,49 +150,18 @@ def actualizar_base_datos(nuevos_productos):
             with open(JSON_FILE, "r", encoding="utf-8") as f:
                 datos_existentes = json.load(f)
         except json.JSONDecodeError:
-            print("[!] Advertencia: ofertas.json tenía formato corrupto. Se reinicializa.")
+            print("[!] Advertencia: ofertas.json con formato corrupto. Inicializando nuevo esquema.")
             datos_existentes = []
 
-    # Aislar y remover registros previos de Éxito, conservando intactas las demás tiendas
+    # Aislar registros anteriores de Éxito y anexar los nuevos hallazgos frescos
     datos_filtrados = [item for item in datos_existentes if item.get("Almacen") != "Éxito"]
     datos_actualizados = datos_filtrados + nuevos_productos
 
     with open(JSON_FILE, "w", encoding="utf-8") as f:
         json.dump(datos_actualizados, f, ensure_ascii=False, indent=2)
 
-    print(f"[+] Total ofertas guardadas en vitrina (Éxito): {len(nuevos_productos)}")
-
-
-def extraer_exito():
-    """Función principal de extracción utilizando Playwright de forma nativa para saltar Akamai."""
-    print("[*] Iniciando sesión con Playwright para sortear Akamai...")
-    todos_los_hallazgos = []
-
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-            locale="es-CO",
-            viewport={"width": 1920, "height": 1080}
-        )
-        page = context.new_page()
-        
-        # Cargar página principal para inicializar WAF y cookies de sesión
-        page.goto("https://www.exito.com/", timeout=60000)
-        page.wait_for_timeout(5000)
-
-        for cat in CATEGORIAS_OBJETIVO:
-            print(f"[*] Rastreando categoría: {cat['nombre']} ({cat['query_args']})...")
-            productos_brutos = consultar_via_navegador(page, cat['query_args'])
-            filtrados = procesar_y_filtrar_productos(productos_brutos)
-            print(f"[+] Encontrados {len(filtrados)} productos válidos con >= 50% en {cat['nombre']}")
-            todos_los_hallazgos.extend(filtrados)
-            time.sleep(2)
-
-        browser.close()
-
-    actualizar_base_datos(todos_los_hallazgos)
-    return todos_los_hallazgos
+    print(f"[+] Total ofertas válidas guardadas en vitrina (Éxito): {len(nuevos_productos)}")
+    print(f"[+] Total general en base de datos multitienda: {len(datos_actualizados)}")
 
 
 if __name__ == "__main__":
