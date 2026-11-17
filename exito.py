@@ -1,16 +1,11 @@
-import os
 import json
 import urllib.parse
-import requests
+from playwright.sync_api import sync_playwright
 
 def extraer_exito():
-    api_key = os.getenv("SCRAPERAPI_KEY", "").strip()
-    if not api_key:
-        print("Error: No se encontró la variable de entorno SCRAPERAPI_KEY en el workflow.")
-        return []
+    print("Iniciando navegador real (Chromium) para obtener sesión válida en Éxito...")
+    ofertas_validas = []
 
-    base_url = "https://www.exito.com/api/graphql"
-    
     variables = {
         "first": 16,
         "after": "0",
@@ -23,44 +18,58 @@ def extraer_exito():
             {"key": "locale", "value": "es-CO"}
         ]
     }
-    
+
     query_params = urllib.parse.urlencode({
         "operationName": "SearchQuery",
         "variables": json.dumps(variables, separators=(",", ":"))
     })
-    target_url = f"{base_url}?{query_params}"
-
-    headers = {
-        "Accept": "application/json, text/plain, */*",
-        "Referer": "https://www.exito.com/tecnologia/celulares?order=discount_desc"
-    }
-
-    proxy_params = {
-        "api_key": api_key,
-        "url": target_url,
-        "render": "false",
-        "premium": "true",
-        "country_code": "co",
-        "keep_headers": "true"
-    }
-
-    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (premium=true)...")
-    ofertas_validas = []
+    api_url = f"https://www.exito.com/api/graphql?{query_params}"
 
     try:
-        response = requests.get(
-            "https://api.scraperapi.com",
-            params=proxy_params,
-            headers=headers,
-            timeout=70
-        )
-        print(f"Código de estado HTTP: {response.status_code}")
-        
-        if response.status_code != 200:
-            print(f"Detalle respuesta: {response.text[:250]}")
+        with sync_playwright() as p:
+            browser = p.chromium.launch(
+                headless=True,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage"
+                ]
+            )
+            context = browser.new_context(
+                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+                viewport={"width": 1366, "height": 768},
+                locale="es-CO",
+                timezone_id="America/Bogota"
+            )
+            context.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+            page = context.new_page()
+
+            # 1. Cargar la página real para que el JS de Akamai genere las cookies de sesión
+            page.goto("https://www.exito.com/tecnologia/celulares?order=discount_desc", wait_until="domcontentloaded", timeout=45000)
+            page.wait_for_timeout(6000)
+
+            # 2. Ejecutar la consulta GraphQL desde dentro del navegador autenticado
+            resultado = page.evaluate(
+                """async (url) => {
+                    const resp = await fetch(url, {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+                    const text = await resp.text();
+                    return { status: resp.status, body: text };
+                }""",
+                api_url
+            )
+            browser.close()
+
+        status = resultado.get("status")
+        print(f"Código de estado GraphQL interno: {status}")
+
+        if status != 200:
+            print(f"Respuesta no exitosa: {resultado.get('body', '')[:200]}")
             return []
 
-        data = response.json()
+        data = json.loads(resultado["body"])
         edges = data.get("data", {}).get("search", {}).get("products", {}).get("edges", [])
         print(f"Productos recibidos en el bloque: {len(edges)}")
 
@@ -69,13 +78,13 @@ def extraer_exito():
             nombre = node.get("name", "Sin nombre")
             slug = node.get("slug", "")
             url_producto = f"https://www.exito.com/{slug}/p" if slug else ""
-            
+
             imagenes = node.get("image", [])
             imagen_url = imagenes[0].get("url", "") if imagenes else ""
 
             offers = node.get("offers", {}).get("offers", [])
             oferta_activa = next((o for o in offers if o.get("quantity", 0) > 0), None)
-            
+
             if not oferta_activa:
                 continue
 
@@ -87,7 +96,7 @@ def extraer_exito():
 
             precio_tarjeta = precio_oferta
             medio_pago_especial = None
-            
+
             for seller in node.get("sellers", []):
                 offer = seller.get("commertialOffer", {})
                 if offer.get("AvailableQuantity", 0) > 0:
@@ -123,7 +132,7 @@ def extraer_exito():
         return ofertas_validas
 
     except Exception as e:
-        print(f"Error controlado: {e}")
+        print(f"Error controlado en Playwright: {e}")
         return []
 
 if __name__ == "__main__":
