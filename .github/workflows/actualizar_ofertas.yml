@@ -23,6 +23,7 @@ permissions:
 jobs:
   actualizar:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
       - name: Descargar código del repositorio
@@ -42,7 +43,7 @@ jobs:
         env:
           TIENDA_OBJETIVO: ${{ github.event.inputs.tienda || 'todas' }}
         run: |
-          python -c "
+          python -u -c "
           import os, json
           from exito import extraer_exito
           from falabella import extraer_falabella
