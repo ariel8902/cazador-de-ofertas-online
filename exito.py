@@ -39,11 +39,12 @@ def extraer_exito():
         "api_key": api_key,
         "url": target_url,
         "render": "false",
+        "premium": "true",
         "country_code": "co",
         "keep_headers": "true"
     }
 
-    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (timeout=70s)...")
+    print("Iniciando consulta puntual a Éxito GraphQL vía ScraperAPI (premium=true)...")
     ofertas_validas = []
 
     try:
