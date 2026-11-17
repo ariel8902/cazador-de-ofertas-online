@@ -27,68 +27,70 @@ CATEGORIAS_OBJETIVO = [
 ]
 
 
-def consultar_graphql_con_playwright(context, categoria_path):
-    """Consulta la API GraphQL usando el contexto de Playwright para evitar 403 por WAF (Akamai)."""
-    url = "https://www.exito.com/api/graphql?operationName=SearchQuery"
-
-    graphql_query = """
-    query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
-      productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
-        products {
-          productName
-          linkText
-          items {
-            images {
-              imageUrl
-            }
-            sellers {
-              sellerId
-              commissions
-              commercialOffer {
-                Price
-                ListPrice
-                spotPrice
-                teaser
-              }
-            }
-          }
-        }
-      }
-    }
-    """
-
-    payload = {
-        "operationName": "SearchQuery",
-        "variables": {
-            "fullText": "",
-            "selectedFacets": [{"key": "c", "value": categoria_path}],
-            "orderBy": "discount:desc",
-            "from": 0,
-            "to": 24
-        },
-        "query": graphql_query
-    }
-
+def consultar_via_navegador(page, categoria_path):
+    """Navega directamente a la página de la categoría usando el navegador para que Akamai no bloquee la API."""
+    url = f"https://www.exito.com/{categoria_path}?initialMap=c&initialQuery=category-2&map=category-2,category-3&orderBy=discount:desc"
+    
     try:
-        # Petición ejecutada desde el contexto del navegador para conservar huella digital y bypass de WAF
-        response = context.request.post(
-            url,
-            data=payload,
-            headers={
-                "Content-Type": "application/json",
-                "Referer": "https://www.exito.com/",
-                "Origin": "https://www.exito.com/"
-            }
-        )
-
-        if response.status == 200:
-            data = response.json()
-            return data.get("data", {}).get("productSearch", {}).get("products", [])
-        else:
-            print(f"[!] Alerta: Código HTTP {response.status} en categoría {categoria_path}")
-            return []
+        page.goto(url, timeout=60000)
+        page.wait_for_timeout(4000)  # Esperar renderizado y carga de productos de la página
+        
+        # Extraer los datos directamente del estado de la página o realizar la consulta interna interceptada
+        # Alternativa robusta: inyectar el fetch de la API GraphQL usando la sesión viva del navegador
+        productos = page.evaluate("""async () => {
+            const query = `
+                query SearchQuery($fullText: String, $selectedFacets: [ISelectedFacet], $orderBy: String, $from: Int, $to: Int) {
+                  productSearch(fullText: $fullText, selectedFacets: $selectedFacets, orderBy: $orderBy, from: $from, to: $to) {
+                    products {
+                      productName
+                      linkText
+                      items {
+                        images {
+                          imageUrl
+                        }
+                        sellers {
+                          sellerId
+                          commissions
+                          commercialOffer {
+                            Price
+                            ListPrice
+                            spotPrice
+                            teaser
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+            `;
+            
+            const response = await fetch('/api/graphql?operationName=SearchQuery', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    operationName: "SearchQuery",
+                    variables: {
+                        fullText: "",
+                        selectedFacets: [{key: "c", value: arguments[0]}],
+                        orderBy: "discount:desc",
+                        from: 0,
+                        to: 24
+                    },
+                    query: query
+                })
+            });
+            
+            if (!response.ok) return [];
+            const json = await response.json();
+            return json.data?.productSearch?.products || [];
+        }, categoria_path)
+        
+        return productos
     except Exception as e:
-        print(f"[!] Error de conexión en categoría {categoria_path}: {str(e)}")
+        print(f"[!] Error al consultar la categoría {categoria_path} vía navegador: {str(e)}")
         return []
 
 
@@ -161,30 +163,34 @@ def actualizar_base_datos(nuevos_productos):
     with open(JSON_FILE, "w", encoding="utf-8") as f:
         json.dump(datos_actualizados, f, ensure_ascii=False, indent=2)
 
-    print(f"[+] Base de datos actualizada con éxito. Registros Éxito: {len(nuevos_productos)}. Total general en JSON: {len(datos_actualizados)}")
+    print(f"[+] Total ofertas guardadas en vitrina (Éxito): {len(nuevos_productos)}")
 
 
 def extraer_exito():
-    """Función principal requerida por el importador del workflow, con retorno de lista para evitar NoneType."""
+    """Función principal de extracción que utiliza Playwright para saltar Akamai de forma nativa."""
     print("[*] Iniciando sesión con Playwright para sortear Akamai...")
     todos_los_hallazgos = []
 
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context(
-            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36"
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            locale="es-CO",
+            viewport={"width": 1920, "height": 1080}
         )
         page = context.new_page()
+        
+        # Cargar la página principal primero para establecer las cookies del WAF
         page.goto("https://www.exito.com/", timeout=60000)
-        page.wait_for_timeout(5000)  # Cargar pasarela y cookies iniciales del WAF
+        page.wait_for_timeout(5000)
 
         for cat in CATEGORIAS_OBJETIVO:
             print(f"[*] Rastreando categoría: {cat['nombre']} ({cat['query_args']})...")
-            productos_brutos = consultar_graphql_con_playwright(context, cat["query_args"])
+            productos_brutos = consultar_via_navegador(page, cat['query_args'])
             filtrados = procesar_y_filtrar_productos(productos_brutos)
             print(f"[+] Encontrados {len(filtrados)} productos válidos con >= 50% en {cat['nombre']}")
             todos_los_hallazgos.extend(filtrados)
-            time.sleep(2)
+            time.sleep(2)  # Pausa de cortesía entre categorías
 
         browser.close()
 
@@ -192,6 +198,7 @@ def extraer_exito():
         actualizar_base_datos(todos_los_hallazgos)
     else:
         print("[!] El rastreo finalizó sin arrojar productos bajo el filtro estricto en las categorías consultadas.")
+        actualizar_base_datos([])
 
     return todos_los_hallazgos
 
