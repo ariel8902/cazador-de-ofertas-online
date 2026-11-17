@@ -24,7 +24,8 @@ jobs:
       - name: Instalar dependencias Python
         run: |
           python -m pip install --upgrade pip
-          pip install requests pandas beautifulsoup4 lxml
+          pip install requests pandas beautifulsoup4 lxml playwright
+          playwright install chromium
 
       - name: Ejecutar Scrapers de Tiendas
         env:
@@ -45,7 +46,6 @@ jobs:
               except Exception:
                   ofertas_actuales = []
 
-          # Conservar ofertas previas de otras tiendas y reemplazar las de Éxito con la nueva extracción limpia
           otras_tiendas = [o for o in ofertas_actuales if o.get('tienda') != 'Éxito']
           nuevas_exito = extraer_exito()
 
