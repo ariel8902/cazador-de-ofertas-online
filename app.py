@@ -19,6 +19,17 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# --- NUEVO: Formato colombiano $ 1.959.900 ---
+def formato_pesos(valor):
+    if valor is None or valor == "":
+        return None
+    try:
+        n = int(float(valor))
+    except:
+        return None
+    # 1959900 -> $ 1.959.900
+    return "$ " + f"{n:,}".replace(",", ".")
+
 # Función para convertir imágenes locales a base64
 def obtener_base64_imagen(ruta):
     if os.path.exists(ruta):
@@ -224,15 +235,26 @@ if ofertas_para_mostrar:
                 st.image(item.get("Imagen", "https://via.placeholder.com/200"), width="stretch")
                 st.subheader(item.get("Nombre", "Producto"))
                 
-                st.markdown(f"❌ **Precio Regular:** ~{item.get('Precio Normal')}~")
+                # --- CORREGIDO: 4 precios con $ y puntos ---
+                precio_normal = formato_pesos(item.get("Precio Normal"))
+                precio_oferta = formato_pesos(item.get("Precio Oferta"))
+                precio_addi = formato_pesos(item.get("Precio Addi"))
+                precio_tarjeta = formato_pesos(item.get("Precio Tarjeta"))
+                precio_otros = formato_pesos(item.get("Precio Otros"))
+
+                if precio_normal:
+                    st.markdown(f"❌ **Precio Regular:** ~{precio_normal}~")
                 
-                precio_tarjeta = item.get("Precio Tarjeta")
-                precio_oferta = item.get("Precio Oferta")
-                if precio_tarjeta and precio_tarjeta != precio_oferta:
-                    st.markdown(f"💳 **Precio Tarjeta:** **{precio_tarjeta}**")
-                    st.markdown(f"💵 **Otros Medios:** **{precio_oferta}**")
-                else:
-                    st.markdown(f"💵 **Precio Oferta:** **{precio_oferta}**")
+                # Si ya tiene Addi / Tarjeta / Otros, los muestra. Si no tiene, NO inventa nada.
+                if precio_addi:
+                    st.markdown(f"⭐ **Addi:** **{precio_addi}**")
+                if precio_tarjeta:
+                    st.markdown(f"💳 **Precio Tarjeta Éxito:** **{precio_tarjeta}**")
+                if precio_otros:
+                    st.markdown(f"💵 **Otros Medios:** **{precio_otros}**")
+                
+                if precio_oferta:
+                    st.markdown(f"🔥 **Precio Oferta:** **{precio_oferta}**")
                 
                 st.markdown(f"📉 **Descuento:** 🔥 **{item.get('Descuento')}**")
                 
